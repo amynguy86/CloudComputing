@@ -1,8 +1,7 @@
 package cs6343.iface;
-import cs6343.data.Directory;
 
 public interface MetadataServer{
-    public Directory list(String path);
+    public String list(String path);
     public boolean add(String path, String filename);
     public boolean change_mode(String path, String filename, String permission);
     public boolean remove(String path);
