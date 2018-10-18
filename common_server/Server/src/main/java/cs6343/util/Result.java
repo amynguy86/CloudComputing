@@ -5,6 +5,12 @@ package cs6343.util;
  * If not successful return message should contain an error message else whatever the operation is suppose to return 
  */
 public class Result<T> {
+	@Override
+	public String toString() {
+		return "Result [operationReturnMessage=" + operationReturnMessage + ", operationSuccess=" + operationSuccess
+				+ "]";
+	}
+
 	public T getOperationReturnMessage() {
 		return operationReturnMessage;
 	}
