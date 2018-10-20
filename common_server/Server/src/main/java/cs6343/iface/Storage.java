@@ -6,12 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cs6343.data.FileType;
-import cs6343.data.Inode;
+import cs6343.data.PhysicalInode;
 import cs6343.data.MetaData;
 import cs6343.util.Result;
 
 public abstract class Storage{
-	protected Inode root;
+	protected PhysicalInode root;
 	public static Logger logger = LoggerFactory.getLogger(Storage.class);
     public abstract Result<String> ls(String path);
     public abstract Result<String> add(String path);
@@ -23,7 +23,7 @@ public abstract class Storage{
     public abstract Result<String> mv(String path);
     
     public Storage() {
-    	root= new Inode();
+    	root= new PhysicalInode();
     	root.setName("/");
     	root.setParent(null);
     	MetaData metaData = new MetaData();
