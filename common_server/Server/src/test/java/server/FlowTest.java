@@ -22,6 +22,12 @@ public class FlowTest {
 	
 	@Test
 	public void testLS() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		String path= "/a//c";
+		String[] directories = path.split("/");
+		for(String d:directories) {
+			logger.info(d);
+		}
+		/*
 		Controller controller = new Controller();
 		controller.setStorageSolution(new CentralizedStorage());
 		logger.info(controller.command("mkdir /amin"));
@@ -33,5 +39,6 @@ public class FlowTest {
 		logger.info(controller.command("ls /amin"));
 		logger.info(controller.command("rmdir /amin"));
 		logger.info(controller.command("ls /"));
+		*/
 	}
 }
