@@ -38,3 +38,5 @@ bin
 *.log
 *.swp
 *.bak
+
+src/main/resources/full
