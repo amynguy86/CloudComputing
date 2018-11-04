@@ -39,4 +39,4 @@ bin
 *.swp
 *.bak
 
-src/main/resources/full
+**/src/main/resources/full
