@@ -1,10 +1,7 @@
 package cs6343.data;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import cs6343.iface.Inode;
@@ -13,12 +10,15 @@ public class PhysicalInode implements Inode {
 	MetaData metaData;
 	String serverId;
 	ReentrantReadWriteLock readWriteLock;
-	private Lock lock;
 
 	public MetaData getMetaData() {
 		return metaData;
 	}
-
+	
+	public ReentrantReadWriteLock getLock() {
+		return readWriteLock;
+	}
+	
 	public void setMetaData(MetaData metaData) {
 		this.metaData = metaData;
 	}
@@ -64,6 +64,7 @@ public class PhysicalInode implements Inode {
 	Map<String, PhysicalInode> children; // PATH,INODE
 	String name;
 	boolean isDeleted;
+	String path;
 	
 	public boolean isDeleted() {
 		return isDeleted;
@@ -105,10 +106,26 @@ public class PhysicalInode implements Inode {
 
 	@Override
 	public void writeLock(LockOperation lockOperation) {
-		// TODO Auto-generated method stub
 		if (lockOperation == LockOperation.LOCK)
 			this.readWriteLock.writeLock().lock();
 		else
 			this.readWriteLock.writeLock().unlock();
+	}
+
+	@Override
+	public String getPath() {
+		// TODO Auto-generated method stub
+		return this.path;
+	}
+
+	@Override
+	public void setPath(String path) {
+		this.path=path;
+	}
+
+	@Override
+	public void setParent(Inode parent) {
+		// TODO Auto-generated method stub
+		
 	}
 }
