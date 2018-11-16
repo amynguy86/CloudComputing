@@ -19,7 +19,7 @@ public class App implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         TreeParser p = new TreeParser();
-        FileNode out = p.readFile("test");
+        FileNode out = p.readFile(args[0]);
         System.out.println("Done reading file");
         System.out.println(out.prettyPrint());
     }

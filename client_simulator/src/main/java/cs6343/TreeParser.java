@@ -17,7 +17,7 @@ public class TreeParser{
     FileNode root = new FileNode("/");
 
     public FileNode readFile(String filename) throws URISyntaxException, IOException {
-        Stream<String> lines = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/" + filename))).lines();
+        Stream<String> lines = Files.lines(Paths.get(filename));
         Iterator<ParsedLine> iter =  lines.map(this::cleanUp).iterator();
         Deque<FileNode> path = new ArrayDeque<>();
         int currDepth = 0;
@@ -25,18 +25,17 @@ public class TreeParser{
         FileNode lastDir = null;
         while(iter.hasNext()){
             ParsedLine line = iter.next();
-            System.out.println(line);
             FileNode file = new FileNode(line.filename);
+            while(currDepth > line.depth){
+                curr = path.pop();
+                currDepth--;
+            }
             if(line.isDirectory){
                 currDepth++;
                 curr.addSubFile(file);
                 path.push(curr);
                 curr = file;
-            } else if (line.depth < currDepth){
-                curr = path.pop();
-                curr.addSubFile(file);
-                currDepth--;
-            } else {
+            } else{
                 curr.addSubFile(file);
             }
         }
@@ -44,10 +43,13 @@ public class TreeParser{
     }
 
     public ParsedLine cleanUp(String in){
-       int depth = StringUtils.countOccurrencesOf(in, "│");
-       int fileStartIndex = in.indexOf("]") + 2;
-       boolean isDirectory = in.endsWith("/");
-       return new ParsedLine(depth,in.substring(fileStartIndex, isDirectory ? in.length() - 1 : in.length()), isDirectory);
+        if(in.startsWith("directory")){
+            return new ParsedLine(1, in, true);
+        }
+        int depth = in.indexOf("[")/4;
+        int fileStartIndex = in.indexOf("]") + 3;
+        boolean isDirectory = in.endsWith("/");
+        return new ParsedLine(depth,in.substring(fileStartIndex, isDirectory ? in.length() - 1 : in.length()), isDirectory);
     }
 
 }
