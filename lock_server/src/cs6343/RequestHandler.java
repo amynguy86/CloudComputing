@@ -46,7 +46,7 @@ public class RequestHandler implements Runnable{
 
         } else if(stuff.startsWith("writelock")){
             String[] fileParts = stuff.split("/");
-            String partials = ""
+            String partials = "";
             for(int i = 1; i < fileParts.length-1; i++){
                partials = partials + fileParts[i] + '/';
                ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -54,12 +54,12 @@ public class RequestHandler implements Runnable{
                lock = lockMap.get(partials);
                lock.readLock().lock();
             }
-            partials = partials + fileParts[fileParts.length-1];
+            partials = partials + fileParts[fileParts.length-1] + '/';
             ReadWriteLock writelock = new ReentrantReadWriteLock();
             lockMap.putIfAbsent(partials, writelock);
             writelock = lockMap.get(partials);
             writelock.writeLock().lock();
-            osw.write("locked)");
+            osw.write("locked");
             osw.flush();
             stuff = isr.readLine();
             partials = "";
@@ -70,7 +70,7 @@ public class RequestHandler implements Runnable{
                 lock = lockMap.get(partials);
                 lock.readLock().unlock();
             }
-            partials = partials + fileParts[fileParts.length-1];
+            partials = partials + fileParts[fileParts.length-1] + '/';
             writelock = lockMap.get(partials);
             writelock.writeLock().unlock();
             osw.write("unlocked");
