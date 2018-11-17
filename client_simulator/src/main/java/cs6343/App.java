@@ -20,8 +20,7 @@ public class App implements CommandLineRunner {
     public void run(String... args) throws Exception {
         TreeParser p = new TreeParser();
         FileNode out = p.readFile(args[0]);
-        System.out.println("Done reading file");
-        System.out.println(out.getSubFile("directory 3").prettyPrint());
-        System.out.println(out.getSubFiles().keySet());
+        RandomTest test = new RandomTest(out, new LoggingMDS());
+        test.walk(10, 100);
     }
 }

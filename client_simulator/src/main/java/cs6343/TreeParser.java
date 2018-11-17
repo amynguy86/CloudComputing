@@ -41,7 +41,6 @@ public class TreeParser{
                 curr.addSubFile(file);
             }
         }
-        System.out.println("NumProcessed: " + numProcessed);
         return root;
     }
 

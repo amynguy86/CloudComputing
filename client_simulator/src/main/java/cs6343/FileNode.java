@@ -1,5 +1,6 @@
 package cs6343;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +19,9 @@ public class FileNode {
     }
 
     public FileNode getSubFile(String filename){
+        if(subFiles == null){
+            subFiles = new HashMap<String, FileNode>();
+        }
         return subFiles.get(filename);
     }
 
