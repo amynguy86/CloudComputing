@@ -5,10 +5,20 @@ import java.util.Map;
 
 public class FileNode {
     public String filename;
+    public boolean isDirectory;
     private Map<String, FileNode> subFiles;
 
-    public FileNode(String filename){
+    public FileNode(String filename, boolean isDirectory){
         this.filename = filename;
+        this.isDirectory = isDirectory;
+    }
+
+    public Map<String, FileNode> getSubFiles(){
+        return subFiles;
+    }
+
+    public FileNode getSubFile(String filename){
+        return subFiles.get(filename);
     }
 
     public void addSubFile(FileNode subfile){

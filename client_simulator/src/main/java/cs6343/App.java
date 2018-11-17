@@ -21,6 +21,7 @@ public class App implements CommandLineRunner {
         TreeParser p = new TreeParser();
         FileNode out = p.readFile(args[0]);
         System.out.println("Done reading file");
-        System.out.println(out.prettyPrint());
+        System.out.println(out.getSubFile("directory 3").prettyPrint());
+        System.out.println(out.getSubFiles().keySet());
     }
 }
