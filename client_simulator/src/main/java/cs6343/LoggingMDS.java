@@ -10,7 +10,7 @@ public class LoggingMDS implements IMetaData {
     }
 
     @Override
-    public List<FileNode> ls(String dirName) {
+    public List<String> ls(String dirName) {
         return null;
     }
 

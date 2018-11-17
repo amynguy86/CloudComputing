@@ -42,7 +42,9 @@ public class FileNode {
        String out = prefix + filename + "\n";
        if(subFiles == null) return out;
        for(FileNode subs : subFiles.values()){
-           out += subs.prettyPrint(prefix + prefix.charAt(prefix.length()-1));
+           if(subs != null){
+               out += subs.prettyPrint(prefix + prefix.charAt(prefix.length()-1));
+           }
        }
        return out;
     }

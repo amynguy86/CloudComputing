@@ -1,9 +1,6 @@
 package cs6343;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class RandomTest {
     private FileNode sampleRoot;
@@ -53,27 +50,38 @@ public class RandomTest {
         }
     }
 
-    public void destructiveWalk(int times, int depth, double destroyProb){
+    public void destructiveWalk(int depth, int times, double destroyProb){
         for(int i = 0; i < times; i++){
             String currentPath = "/";
-            FileNode createdCurrent = createdRoot;
-            FileNode current = null;
+            FileNode current = createdRoot;
             for(int j = 0; j < depth; j++){
                 if(!current.isDirectory) break;
-                current = randomFile(current);
-                if(current == null) break;
-                currentPath += current.filename;
-                if(random.nextDouble() < destroyProb) continue;
-                if(current.isDirectory){
-                    currentPath += "/";
-                    FileNode updatedFile = updateCreatedTree(createdCurrent, current);
-                    createdCurrent.addSubFile(updatedFile);
-                    createdCurrent = createdCurrent.getSubFile(current.filename);
-                } else  {
-                    createdCurrent.addSubFile(new FileNode(current.filename, false));
-                    mds.touch(currentPath);
+                FileNode subfile = randomFile(current);
+                if(subfile == null) break;
+                String newPath = currentPath + subfile.filename;
+                if(random.nextDouble() > destroyProb){
+                    currentPath = subfile.isDirectory ? newPath + "/" : newPath;
+                    current = subfile;
+                } else {
+                    if(current.isDirectory){
+                        mds.rmdir(newPath);
+                    } else  {
+                        mds.rm(newPath);
+                    }
+                    ensureNotInside(mds.ls(currentPath), subfile.filename);
+                    current.removeSubFile(subfile);
                 }
             }
+        }
+        System.out.println(createdRoot.prettyPrint());
+    }
+
+    private void ensureNotInside(List<String> ls, String filename) {
+        if(ls == null) return;
+        for(String f : ls){
+           if(filename.equals(f)){
+               throw new RuntimeException("Deleted a file and it was still present in response");
+           }
         }
     }
 
