@@ -22,6 +22,7 @@ public class RequestHandler implements Runnable{
 
     public void handleRequest() throws IOException {
         String stuff = isr.readLine();
+        System.out.println(stuff);
         if(stuff.startsWith("readlock")){
             String[] fileParts = stuff.split("/");
             String partials = "";
@@ -32,7 +33,7 @@ public class RequestHandler implements Runnable{
                 lock = lockMap.get(partials);
                 lock.readLock().lock();
             }
-            osw.write("locked");
+            osw.write("locked\n");
             osw.flush();
             stuff = isr.readLine();
             partials = "";
@@ -41,7 +42,7 @@ public class RequestHandler implements Runnable{
                 ReadWriteLock lock = lockMap.get(partials);
                 lock.readLock().unlock();
             }
-            osw.write("unlocked");
+            osw.write("unlocked\n");
             osw.flush();
 
         } else if(stuff.startsWith("writelock")){
@@ -59,7 +60,7 @@ public class RequestHandler implements Runnable{
             lockMap.putIfAbsent(partials, writelock);
             writelock = lockMap.get(partials);
             writelock.writeLock().lock();
-            osw.write("locked");
+            osw.write("locked\n");
             osw.flush();
             stuff = isr.readLine();
             partials = "";
@@ -73,7 +74,7 @@ public class RequestHandler implements Runnable{
             partials = partials + fileParts[fileParts.length-1] + '/';
             writelock = lockMap.get(partials);
             writelock.writeLock().unlock();
-            osw.write("unlocked");
+            osw.write("unlocked\n");
             osw.flush();
         }
         osw.flush();
