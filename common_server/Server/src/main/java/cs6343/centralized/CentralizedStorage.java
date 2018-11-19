@@ -1,5 +1,7 @@
 package cs6343.centralized;
 
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -7,23 +9,28 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+
 import cs6343.data.FileType;
 import cs6343.data.PhysicalInode;
 import cs6343.data.MetaData;
 import cs6343.iface.Inode;
 import cs6343.iface.Inode.LockOperation;
 import cs6343.iface.Storage;
+import cs6343.util.OperationNotSupportedException;
 import cs6343.util.RedirectException;
 import cs6343.util.Result;
 
 public class CentralizedStorage extends Storage {
 	public static Logger logger = LoggerFactory.getLogger(CentralizedStorage.class);
+	private PhysicalInode root;
 
 	public CentralizedStorage() {
-		super();
+		this("/");
 	}
 
 	public CentralizedStorage(String rootdir) {
+		logger.info("Initializing Centralized Storage");
 		root = new PhysicalInode();
 		root.setName(rootdir);
 		root.setParent(null);
@@ -33,48 +40,58 @@ public class CentralizedStorage extends Storage {
 		root.setMetaData(metaData);
 	}
 	
+	public CentralizedStorage(PhysicalInode rootdir) {
+		root = rootdir;
+	}
+
 	/*
 	 * Need some path validation here as well
 	 */
-	private List<String> getPathAsList(String path) {
-		
+	public List<String> getPathAsList(String path) {
+
 		String[] directories = path.split("/");
 		List<String> list = new ArrayList<>();
 		for (String d : directories) {
 			list.add(d);
 		}
-		
+
 		if (path.equals("/"))
 			list.add(0, "/");
-		else if (list.size() > 0 && list.get(0).length() == 0)
-			list.set(0, "/"); // empty char
-		else {
+		else if (list.size() > 0) {
+			if (list.get(0).length() == 0)
+				list.set(0, "/"); // empty char
+		} else {
 			logger.error("Invalid Path: " + path);
 			return null;
 		}
-		
+
 		return list;
 	}
+
 	@Override
 	public Result<String> ls(String path) {
-		return ls(path,true);
+		return ls(path, true);
 	}
-	
-	public Inode getRoot() {
+
+	public PhysicalInode getRoot() {
 		return this.root;
 	}
-	
-	public Result<String> ls(String path,boolean unlockAtEnd) {
+
+	public void setRoot(PhysicalInode root) {
+		this.root = root;
+	}
+
+	public Result<String> ls(String path, boolean unlockAtEnd) {
 		logger.info("Executing Command ls, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
-		List<String> list  = getPathAsList(path);
-		
-		if(list==null) {
+		List<String> list = getPathAsList(path);
+
+		if (list == null) {
 			result.setOperationReturnMessage("Invalid Path");
 			return result;
 		}
-		
+
 		Result<List<Inode>> result2 = this.lockRead(list, list.size());
 		List<Inode> listInodes = result2.getOperationReturnVal();
 		if (result2.isOperationSuccess()) {
@@ -86,23 +103,9 @@ public class CentralizedStorage extends Storage {
 		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if(unlockAtEnd)
+		if (unlockAtEnd)
 			this.unLockRead(listInodes);
 		return result;
-	}
-
-	public void parentDirectory(String path) {
-		/*
-		 * String[] components = path.split("/"); Directory current = rootDir; int i =
-		 * 0; while(current != null && i < components.length-1){ current =
-		 * current.subdirectories.get(components[i]); } return current;
-		 */
-	}
-
-	@Override
-	public Result<String> add(String path) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -111,7 +114,7 @@ public class CentralizedStorage extends Storage {
 		return null;
 	}
 
-	private boolean isPhysicalNode(Inode inode) {
+	public static boolean isPhysicalNode(Inode inode) {
 		if (inode.getClass().equals(PhysicalInode.class)) {
 			return true;
 		} else
@@ -154,7 +157,7 @@ public class CentralizedStorage extends Storage {
 
 					inode = ((PhysicalInode) inode).getChild(path.get(i));
 
-					if (inode == null) {
+					if (inode == null || (this.isPhysicalNode(inode) && inode.getMetaData().getType() == FileType.FILE)) {
 						result.setOperationReturnMessage("Unable to find DIR:" + path.get(i));
 						return result;
 					}
@@ -170,7 +173,7 @@ public class CentralizedStorage extends Storage {
 		}
 		result.setOperationSuccess(true);
 		return result;
-	}	
+	}
 
 	/*
 	 * Return list of unlockedNodes, these nodes MUST have been locked!
@@ -189,20 +192,26 @@ public class CentralizedStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> mkdir(String path){
-		return mkdir(path,true);
-	}
-	
-	public Result<String> mkdir(String path,boolean unlockAtEnd) {
+	public Result<String> mkdir(String path) {
 		logger.info("Executing Command MKDIR, data: {}", path);
+		return createNode(path, FileType.DIRECTORY, true);
+	}
+
+	@Override
+	public Result<String> touch(String path) {
+		logger.info("Executing Command touch, data: {}", path);
+		return createNode(path, FileType.FILE, true);
+	}
+
+	public Result<String> createNode(String path, FileType fileType, boolean unlockAtEnd) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
-		
-		List<String> list = getPathAsList(path); 
-		if (list==null ||  list.size() < 2) {
-			if(list!=null)
+
+		List<String> list = getPathAsList(path);
+		if (list == null || list.size() < 2) {
+			if (list != null)
 				logger.error("Size of path must be atleast 2");
-			
+
 			result.setOperationReturnMessage("Invalid Path");
 			return result;
 		}
@@ -219,55 +228,69 @@ public class CentralizedStorage extends Storage {
 			else
 				parentInode = this.root;
 
-			if (parentInode == null) {
+			if (parentInode == null || (isPhysicalNode(parentInode) && parentInode.getMetaData().getType() == FileType.FILE))
 				result.setOperationReturnMessage("DIR NOT FOUND:" + parentDir);
-			} else {
+			else {
 				try {
-				parentInode.writeLock(LockOperation.LOCK);
-				PhysicalInode newInode = new PhysicalInode();
-				newInode.setName(dirToCreate);
-				newInode.setParent(parentInode);
-				MetaData metaData = new MetaData();
-				metaData.setType(FileType.DIRECTORY);
-				newInode.setMetaData(metaData);
-				((PhysicalInode)parentInode).addChild(newInode);
-				newInode.setPath(path);
-				result.setOperationSuccess(true);
-				result.setOperationReturnVal("Directory Created Successfull");
-				if(unlockAtEnd)
-					parentInode.writeLock(LockOperation.UNLOCK);
-				}
-				catch(RedirectException ex) {
+					parentInode.writeLock(LockOperation.LOCK);
+					if (((PhysicalInode) parentInode).getChild(dirToCreate) == null) {
+						PhysicalInode newInode = new PhysicalInode();
+						newInode.setName(dirToCreate);
+						newInode.setParent(parentInode);
+						MetaData metaData = new MetaData();
+						metaData.setType(fileType);
+						newInode.setMetaData(metaData);
+						((PhysicalInode) parentInode).addChild(newInode);
+						newInode.setPath(normalizePath(parentInode.getPath())+"/"+dirToCreate);
+						result.setOperationSuccess(true);
+						result.setOperationReturnVal("Directory Created Successfull");
+					}
+					else {
+						result.setOperationReturnMessage("Directory already exists");
+					}
+					if (unlockAtEnd)
+						parentInode.writeLock(LockOperation.UNLOCK);
+				} catch (RedirectException ex) {
 					result.setOperationReturnMessage("REDIRECT TO SERVER:" + parentInode.getServerId());
 				}
 			}
-		} else {
+		} else
+
+		{
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if(unlockAtEnd)
+		if (unlockAtEnd)
 			this.unLockRead(listInodes);
 		return result;
 	}
 
 	@Override
 	public Result<String> rmdir(String path) {
-		return rmdir(path,true);
+		return rmdir(path, true);
 	}
-	
-	public Result<String> rmdir(String path,boolean unlockAtEnd) {
+
+	public static String normalizePath(String path) {
+		String returnPath = path;
+		if (path.length() > 0)
+			returnPath = path.charAt(path.length() - 1) == '/' ? path.substring(0, path.length() - 1) : path;
+
+		return returnPath;
+	}
+
+	public Result<String> rmdir(String path, boolean unlockAtEnd) {
 		logger.info("Executing Command RMDIR, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
-		
-		List<String> list = getPathAsList(path); 
-		if (list==null ||  list.size() < 2) {
-			if(list!=null)
+
+		List<String> list = getPathAsList(path);
+		if (list == null || list.size() < 2) {
+			if (list != null)
 				logger.error("Size of path must be atleast 2");
-			
+
 			result.setOperationReturnMessage("Invalid Path");
 			return result;
 		}
-		
+
 		Result<List<Inode>> result2 = this.lockRead(list, list.size() - 2);
 		List<Inode> listInodes = result2.getOperationReturnVal();
 
@@ -288,29 +311,35 @@ public class CentralizedStorage extends Storage {
 				result.setOperationReturnMessage("DIR NOT FOUND:" + parentDir);
 			} else {
 				try {
-				parentInode.writeLock(LockOperation.LOCK);
-				dirToDeleteInode = ((PhysicalInode)parentInode).getChild(dirToDelete);
-				if (dirToDeleteInode != null) {
-					if(!isPhysicalNode(dirToDeleteInode)) {
-						//todo make a remote request to delete the partiion
+					parentInode.writeLock(LockOperation.LOCK);
+					dirToDeleteInode = ((PhysicalInode) parentInode).getChild(dirToDelete);
+					if (dirToDeleteInode != null) {
+						if (!isPhysicalNode(dirToDeleteInode)) {
+							//Todo send to mars
+							//result.setOperationReturnMessage("REDIRECT TO SERVER:" + dirToDeleteInode.getServerId());
+							
+						} else {
+							((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());
+							result.setOperationSuccess(true);
+							result.setOperationReturnVal("Directory Deleted Successfull");
+						}
+					} else {
+						result.setOperationReturnMessage("Directory " + dirToDelete + " does not exist");
 					}
-					((PhysicalInode)parentInode).getChildren().remove(dirToDeleteInode.getName());
-					result.setOperationSuccess(true);
-					result.setOperationReturnVal("Directory Deleted Successfull");
-				} else {
-					result.setOperationReturnVal("Directory " + dirToDelete + " does not exist");
-				}
-				if(unlockAtEnd)
-					parentInode.writeLock(LockOperation.UNLOCK);
-				}
-				catch(RedirectException ex) {
+					if (unlockAtEnd)
+						parentInode.writeLock(LockOperation.UNLOCK);
+				} catch (RedirectException ex) {
 					result.setOperationReturnMessage("REDIRECT TO SERVER:" + parentInode.getServerId());
+				} catch (OperationNotSupportedException ex) {
+					result.setOperationReturnMessage(ex.getMessage());
+					if (unlockAtEnd)
+						parentInode.writeLock(LockOperation.UNLOCK);
 				}
 			}
 		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if(unlockAtEnd)
+		if (unlockAtEnd)
 			this.unLockRead(listInodes);
 		return result;
 	}
@@ -326,5 +355,4 @@ public class CentralizedStorage extends Storage {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 }

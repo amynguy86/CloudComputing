@@ -7,35 +7,45 @@ import cs6343.util.RedirectException;
  * This Inode represents an inode that may not reside on the same server
  */
 public class VirtualInode implements Inode {
+	private String name;
+	private String serverId;
+	private String path;
+	private Inode parent;
+
+	public VirtualInode() {
+
+	}
+
+	public VirtualInode(Inode inode, String serverId) {
+		this.setName(inode.getName());
+		this.setPath(inode.getPath());
+		this.setParent(inode.getParent());
+		this.setServerId(serverId);
+	}
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.name;
 	}
 
 	@Override
 	public void setName(String name) {
-		// TODO Auto-generated method stub
-		
+		this.name = name;
 	}
 
 	@Override
 	public String getServerId() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.serverId;
 	}
 
 	@Override
 	public void setServerId(String serverId) {
-		// TODO Auto-generated method stub
-		
+		this.serverId = serverId;
 	}
 
 	@Override
 	public Inode getParent() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.parent;
 	}
 
 	@Override
@@ -45,26 +55,29 @@ public class VirtualInode implements Inode {
 	}
 
 	@Override
-	public void writeLock(LockOperation lockOperation){
+	public void writeLock(LockOperation lockOperation) {
 		// TODO Auto-generated method stub
 		throw new RedirectException();
 	}
 
 	@Override
 	public String getPath() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.path;
 	}
 
 	@Override
 	public void setPath(String path) {
-		// TODO Auto-generated method stub
-		
+		this.path=path;
 	}
 
 	@Override
 	public void setParent(Inode parent) {
+		this.parent = parent;
+	}
+
+	@Override
+	public MetaData getMetaData() {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 }

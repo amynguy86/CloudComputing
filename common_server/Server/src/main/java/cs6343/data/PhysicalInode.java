@@ -1,14 +1,22 @@
 package cs6343.data;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cs6343.iface.Inode;
 
+@JsonIgnoreProperties(value = { "lock" })
 public class PhysicalInode implements Inode {
 	MetaData metaData;
 	String serverId;
+	
+	@JsonIgnore
 	ReentrantReadWriteLock readWriteLock;
 
 	public MetaData getMetaData() {
@@ -36,19 +44,19 @@ public class PhysicalInode implements Inode {
 		return "Inode [name=" + name + "]";
 	}
 
-	public void addChild(PhysicalInode inode) {
+	public void addChild(Inode inode) {
 		this.children.put(inode.getName(), inode);
 	}
 
-	public PhysicalInode getChild(PhysicalInode inode) {
+	public Inode getChild(PhysicalInode inode) {
 		return this.children.get(inode.getName());
 	}
 
-	public PhysicalInode getChild(String name) {
+	public Inode getChild(String name) {
 		return this.children.get(name);
 	}
 
-	public Map<String, PhysicalInode> getChildren() {
+	public Map<String, Inode> getChildren() {
 		return this.children;
 	}
 
@@ -59,9 +67,9 @@ public class PhysicalInode implements Inode {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	@JsonIgnore
 	PhysicalInode parent;
-	Map<String, PhysicalInode> children; // PATH,INODE
+	Map<String, Inode> children; // PATH,INODE
 	String name;
 	boolean isDeleted;
 	String path;
@@ -125,7 +133,34 @@ public class PhysicalInode implements Inode {
 
 	@Override
 	public void setParent(Inode parent) {
-		// TODO Auto-generated method stub
-		
+		this.parent=(PhysicalInode)parent;
+	}
+	
+	public static String toJson(PhysicalInode nodeToMoveInode) {
+		try {
+		ObjectMapper mapper = new ObjectMapper();
+		String json=mapper.writeValueAsString(nodeToMoveInode);
+		return json;
+		}
+		catch(JsonProcessingException ex){
+			ex.printStackTrace();
+			return null;
+		}
+	}
+	
+	public static PhysicalInode fromJson(String json) {
+		try {
+		ObjectMapper mapper = new ObjectMapper();
+		PhysicalInode node=(PhysicalInode) mapper.readValue(json, Inode.class);
+		return node;
+		}
+		catch(JsonProcessingException ex){
+			ex.printStackTrace();
+			return null;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
