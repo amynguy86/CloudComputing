@@ -16,10 +16,10 @@ import cs6343.util.RedirectException;
 import cs6343.util.Result;
 
 public class CephStorage extends Storage {
-	CentralizedStorage storage;
+	public CentralizedStorage storage;
 	CephServer cephServer;
 
-	boolean isRoot;
+	public boolean isRoot;
 	String rootServerAddress;
 
 	public String getRootServerAddress() {

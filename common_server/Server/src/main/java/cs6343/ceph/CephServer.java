@@ -1,6 +1,7 @@
 package cs6343.ceph;
 
 
+import cs6343.LockServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestTemplate;
@@ -12,9 +13,10 @@ import cs6343.util.Result;
 
 public class CephServer {
 	public static Logger logger = LoggerFactory.getLogger(CephServer.class);
-	CephStorage cephStorage;
+	public CephStorage cephStorage;
 	RemoteLock remoteLock;
 	RestTemplate restTemplate;
+	LockServer lockServer;
 
 	public static class ServerRequest {
 		private String command;
@@ -48,6 +50,8 @@ public class CephServer {
 	public CephServer(CephStorage cephStorage) {
 		restTemplate=new RestTemplate();
 		this.cephStorage = cephStorage;
+		this.lockServer = new LockServer(this);
+		new Thread(lockServer).run();
 	}
 
 	/*

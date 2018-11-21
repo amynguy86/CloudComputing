@@ -5,8 +5,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Import;
 
 import cs6343.centralized.CentralizedStorage;
 import cs6343.ceph.CephStorage;
@@ -41,7 +39,7 @@ public class App {
 		storage.mkdir("/a/c/g");
 		
 	}
-	
+
 	// Setting the server type to ceph
 	@ConditionalOnProperty(name = "cloud.centralized", havingValue = "false")
 	@Bean

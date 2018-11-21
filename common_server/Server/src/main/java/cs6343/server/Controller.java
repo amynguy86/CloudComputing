@@ -43,7 +43,7 @@ public class Controller {
 	}
 
 	/*
-	 * For Ceph Server to Server communication
+	 * For Ceph LockServer to LockServer communication
 	 */
 	@ConditionalOnProperty(name = "cloud.centralized", havingValue = "false")
 	@RequestMapping("/ceph")
