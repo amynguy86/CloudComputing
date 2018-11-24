@@ -3,6 +3,7 @@ package cs6343;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import com.google.gson.*;
 
 public class FileNode {
     public String filename;
@@ -32,9 +33,24 @@ public class FileNode {
         subFiles.put(subfile.filename, subfile);
     }
 
+    public String getFileName()
+    {
+        return filename;
+    }
+
+    //pretty sure this doesn't completely remove the entry
+
     public void removeSubFile(FileNode subfile){
         if(subFiles != null){
             subFiles.put(subfile.filename, null);
+        }
+    }
+
+    public void removeSubFileByName(String name)
+    {
+        if(subFiles!=null)
+        {
+            subFiles.remove(this.getSubFile(name));
         }
     }
 
