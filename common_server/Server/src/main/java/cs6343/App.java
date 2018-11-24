@@ -1,14 +1,17 @@
 package cs6343;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 
 import cs6343.centralized.CentralizedStorage;
 import cs6343.ceph.CephStorage;
 import cs6343.iface.Storage;
+import org.springframework.core.env.Environment;
 
 /**
  * Hello world!
@@ -20,6 +23,9 @@ public class App {
 	public static void main(String[] args) {
 		SpringApplication.run(App.class, args);
 	}
+
+	@Autowired
+	Environment environment;
 
 	// Setting the server type to centralized
 	@ConditionalOnProperty(name = "cloud.centralized", havingValue = "true")
@@ -46,7 +52,8 @@ public class App {
 	public Storage cephStorage(@Value("${cloud.ceph.root}") boolean isRoot,
 			@Value("${cloud.ceph.root.server.address}") String rootServer,
 			@Value("${cloud.demo}") boolean isDemo) {
-		Storage st=new CephStorage(isRoot, rootServer);
+		System.out.println(environment.toString());
+		Storage st=new CephStorage(isRoot, rootServer, Integer.parseInt(environment.getProperty("lockserver.port")));
 		if(isDemo)
 			createRandomStructure(st);
 		return st ;

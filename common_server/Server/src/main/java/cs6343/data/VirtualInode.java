@@ -80,4 +80,14 @@ public class VirtualInode implements Inode {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public String toString() {
+		return "VirtualInode{" +
+				"name='" + name + '\'' +
+				", serverId='" + serverId + '\'' +
+				", path='" + path + '\'' +
+				", parent=" + parent +
+				'}';
+	}
 }

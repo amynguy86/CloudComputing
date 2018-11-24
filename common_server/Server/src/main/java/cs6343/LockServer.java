@@ -10,16 +10,17 @@ import java.net.Socket;
 
 public class LockServer implements Runnable{
     private CephServer server;
-
-    public LockServer(CephServer server){
+    private int port;
+    public LockServer(CephServer server, int port){
         this.server = server;
+        this.port = port;
     }
 
     @Override
     public void run() {
         ServerSocket ss = null;
         try {
-            ss = new ServerSocket(6969);
+            ss = new ServerSocket(port);
             while(true){
                 Socket s = null;
                 s = ss.accept();

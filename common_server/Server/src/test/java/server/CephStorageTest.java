@@ -104,7 +104,7 @@ public class CephStorageTest {
 
 	@Test
 	public void testCreatePartition() {
-		CephStorage storage = new CephStorage(false,"localhost:8080");
+		CephStorage storage = new CephStorage(false,"localhost:8080", 8081);
 		String rootDirName="/somedir/on/parent/server/";
 		CentralizedStorage CentralStorage = this.initTree("SomeRoot",rootDirName);
 		CentralStorage.getRoot().setPath(rootDirName+CentralStorage.getRoot().getName());

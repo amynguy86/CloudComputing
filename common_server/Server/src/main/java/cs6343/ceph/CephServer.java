@@ -18,6 +18,7 @@ public class CephServer {
 	RestTemplate restTemplate;
 	LockServer lockServer;
 
+
 	public static class ServerRequest {
 		private String command;
 		private String data;
@@ -47,11 +48,11 @@ public class CephServer {
 		}
 	}
 
-	public CephServer(CephStorage cephStorage) {
+	public CephServer(CephStorage cephStorage, int port) {
 		restTemplate=new RestTemplate();
 		this.cephStorage = cephStorage;
-		this.lockServer = new LockServer(this);
-		new Thread(lockServer).run();
+		this.lockServer = new LockServer(this, port+1);
+		new Thread(lockServer).start();
 	}
 
 	/*

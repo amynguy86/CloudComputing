@@ -14,6 +14,9 @@ import cs6343.iface.Inode.LockOperation;
 import cs6343.util.OperationNotSupportedException;
 import cs6343.util.RedirectException;
 import cs6343.util.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.env.Environment;
 
 public class CephStorage extends Storage {
 	public CentralizedStorage storage;
@@ -45,9 +48,9 @@ public class CephStorage extends Storage {
 		this.cephServer = cephServer;
 	}
 
-	public CephStorage(boolean isRoot, String rootServerAddress) {
+	public CephStorage(boolean isRoot, String rootServerAddress, int port) {
 		this(isRoot, rootServerAddress, null);
-		this.cephServer = new CephServer(this);
+		this.cephServer = new CephServer(this, port+1);
 	}
 
 	public void init(PhysicalInode rootNode) {
@@ -127,9 +130,13 @@ public class CephStorage extends Storage {
 						if (CentralizedStorage.isPhysicalNode(nodeToMoveInode)) {
 							String json = PhysicalInode.toJson((PhysicalInode) nodeToMoveInode);
 							nodeToMoveInode.setParent(parentInode);
+							String prevName = nodeToMoveInode.getName();
+							//Set the name and path to be the same, the fact that the root server has '/' as both it's
+							//name and path is used in multiple places
+							nodeToMoveInode.setName(nodeToMoveInode.getPath());
 							if (this.cephServer.sendCreatePartition(json, serverNo)) {
 								nodeToMoveInode.setParent(parentInode);
-								((PhysicalInode) parentInode).getChildren().remove(nodeToMoveInode.getName());
+								((PhysicalInode) parentInode).getChildren().remove(prevName);
 								VirtualInode vInode = new VirtualInode(nodeToMoveInode, serverNo);
 								((PhysicalInode) parentInode).addChild(vInode);
 								result.setOperationSuccess(true);
@@ -177,12 +184,13 @@ public class CephStorage extends Storage {
 	public Result<String[]> validateCephPath(String path) {
 		Result<String[]> result = new Result<>();
 		result.setOperationSuccess(false);
-		String cephPath[] = path.split("%");
-	
-		if (cephPath.length != 2 && cephPath[0].charAt(cephPath.length-1)!='%') {
+		String cephPath[] = path.split("%",2);
+
+		if (cephPath.length != 2 && path.charAt(path.length()-1)!='%') {
 			result.setOperationReturnMessage(
 					"Invalid Path, CephPath to a server containing a partition is something like /a/b/c%d/e/f");
 		} else if (!cephPath[0].equals(this.storage.getRoot().getPath())) {
+		    logger.error(this.storage.getRoot().getPath());
 			result.setOperationReturnMessage("Path " + cephPath[0] + " does not reside on this server");
 		} else {
 			cephPath[1] = cephPath.length<2 || cephPath[1].length() == 0 ? this.storage.getRoot().getName()
