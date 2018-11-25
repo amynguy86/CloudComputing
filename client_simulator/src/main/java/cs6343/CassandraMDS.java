@@ -7,35 +7,44 @@ import java.util.ArrayList;
 
 import java.util.Set;
 public class CassandraMDS implements IMetaData {
-    CassConnector cc=null;
+    CassConnector cc;
     public CassandraMDS(String IPAddress)
     {
         cc=new CassConnector(IPAddress);
         cc.configureDB();
-
+        FileNode root=new FileNode("/",true);
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        cc.insert("/",gson.toJson(root));
     }
-    //what happens if called to make directory in root?
+
     public boolean mkdir(String dirName)
     {
-        //add directory to cassandra
         FileNode newFile= new FileNode(dirName, true);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
+        //find parent directory
+        int lastIndex=dirName.lastIndexOf("/");
+        String parentDir=dirName.substring(0,lastIndex);  //if parent is root using this sets parentDir to an empty string
+        if(parentDir.equals("")) //parent directory is root
+        {
+            parentDir="/";
+        }
+        String parentString=cc.read(parentDir);
+        if(parentString==null) //parent directory does not exist
+        {
+            return false;
+        }
+        //add directory to the system
         boolean fileAdded=cc.insert(dirName, gson.toJson(newFile));
         if(!fileAdded)  //file already exists in system
         {
             return false;
         }
-        //find parent and add directory to its subfiles list
-        int lastIndex=dirName.lastIndexOf("/");
-        String parentDir=dirName.substring(0,lastIndex);
-        String parentString=cc.read(parentDir);
-        if(parentString!=null) //parent exists
-        {
-            FileNode parentNode=gson.fromJson(parentString,FileNode.class);
-            parentNode.addSubFile(newFile);
-            cc.edit(parentDir, gson.toJson(parentNode));
-        }
+        //add directory to parent's list of subfiles
+        FileNode parentNode=gson.fromJson(parentString,FileNode.class);
+        parentNode.addSubFile(newFile);
+        cc.edit(parentDir, gson.toJson(parentNode));
         return true;
 
     }
@@ -51,13 +60,35 @@ public class CassandraMDS implements IMetaData {
         subfileList.addAll(keys);
         return subfileList;
     }
+    //needs to add to parent
     public boolean touch(String filePath)
     {
         FileNode newFile= new FileNode(filePath, false);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
+        //find parent directory
+        int lastIndex=filePath.lastIndexOf("/");
+        String parentDir=filePath.substring(0,lastIndex);  //if parent is root using this sets parentDir to an empty string
+        if(parentDir.equals("")) //parent directory is root
+        {
+            parentDir="/";
+        }
+        String parentString=cc.read(parentDir);
+        if(parentString==null) //parent directory does not exist
+        {
+            return false;
+        }
+        //add directory to the system
         boolean fileAdded=cc.insert(filePath, gson.toJson(newFile));
-        return fileAdded;
+        if(!fileAdded)  //file already exists in system
+        {
+            return false;
+        }
+        //add directory to parent's list of subfiles
+        FileNode parentNode=gson.fromJson(parentString,FileNode.class);
+        parentNode.addSubFile(newFile);
+        cc.edit(parentDir, gson.toJson(parentNode));
+        return true;
     }
     public boolean rm(String filePath)
     {
@@ -78,7 +109,7 @@ public class CassandraMDS implements IMetaData {
         }
         return fileDeleted;
     }
-    //needs to recursively delete subdirectories?
+    //needs to recursively delete subdirectories
     public boolean rmdir(String dirname)
     {
         return false;
