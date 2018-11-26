@@ -169,7 +169,6 @@ public class CentralizedStorage extends Storage {
 
 				}
 			} catch (RedirectException ex) {
-			    unLockRead(list);
 				result.setOperationReturnMessage("REDIRECT TO SERVER:" + inode.getServerId() + "\n FOR PATH: " + partialPath.toString() + "/" + inode.getName());
 				return result;
 
