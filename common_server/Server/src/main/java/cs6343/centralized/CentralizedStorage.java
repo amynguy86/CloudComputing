@@ -140,10 +140,12 @@ public class CentralizedStorage extends Storage {
 
 			result.setOperationSuccess(false);
 			result.setOperationReturnVal(list);
+			StringBuilder partialPath = new StringBuilder();
 
 			try {
 				inode.readLock(LockOperation.LOCK);
 				list.add(inode);
+				partialPath.append(inode.getName());
 
 				if (!inode.getName().equals(path.get(0))) {
 					result.setOperationReturnMessage("First directory in path: " + path.get(0)
@@ -162,10 +164,13 @@ public class CentralizedStorage extends Storage {
 					}
 					inode.readLock(LockOperation.LOCK);
 					list.add(inode);
+					partialPath.append(inode.getName());
+					partialPath.append("/");
 
 				}
 			} catch (RedirectException ex) {
-				result.setOperationReturnMessage("REDIRECT TO SERVER:" + inode.getServerId());
+			    unLockRead(list);
+				result.setOperationReturnMessage("REDIRECT TO SERVER:" + inode.getServerId() + "\n FOR PATH: " + partialPath.toString() + "/" + inode.getName());
 				return result;
 
 			}

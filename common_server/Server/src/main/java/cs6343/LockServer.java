@@ -14,14 +14,18 @@ public class LockServer implements Runnable{
     public LockServer(CephServer server, int port){
         this.server = server;
         this.port = port;
+        System.out.println("Created Lockserver");
     }
 
     @Override
     public void run() {
         ServerSocket ss = null;
+        System.out.println("Running Lockserver");
         try {
             ss = new ServerSocket(port);
+            System.out.println("PORT: " + port);
             while(true){
+                System.out.println("Reading Lockserver");
                 Socket s = null;
                 s = ss.accept();
                 InputStreamReader isr = new InputStreamReader(s.getInputStream());

@@ -5,15 +5,19 @@ import cs6343.data.PhysicalInode;
 import cs6343.data.VirtualInode;
 import cs6343.iface.Inode;
 import cs6343.util.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LockRequestHandler implements Runnable {
+    private static Logger LOGGER = LoggerFactory.getLogger(LockRequestHandler.class);
     CephServer cephServer;
     String rootPath;
 	BufferedReader isr;
@@ -26,7 +30,6 @@ public class LockRequestHandler implements Runnable {
 		this.isr = new BufferedReader(isr);
 		this.osw = osw;
 		this.s = s;
-		this.rootPath = rootPath;
 	}
 
 	
@@ -42,20 +45,71 @@ public class LockRequestHandler implements Runnable {
 	public static interface WriteLock extends Lock {
 	
 	}
-	public void cephHandleRequest() throws IOException {
+
+    public void handleRequest() throws IOException {
+        String path = isr.readLine();
+        PhysicalInode rootNode = cephServer.cephStorage.storage.getRoot();
+        if(!path.startsWith(rootNode.getName())){
+            osw.write("Path doesn't start with root! " + path + " root: " + rootNode.getName());
+            flushAndClose();
+            return;
+        }
+
+        List<String> parts = Arrays.asList(path.substring(rootNode.getName().length()).split("/"));
+        List<Inode> locks = new ArrayList<>();
+        PhysicalInode curr = rootNode;
+        RemoteLock remoteLock = null;
+        for(String part : parts){
+            curr.readLock(Inode.LockOperation.LOCK);
+            locks.add(curr);
+            Inode next = curr.getChild(part);
+            if(next == null){
+                osw.write("Could not find part: " + part + "\n");
+                flushAndClose();
+                for(Inode lock : locks){ lock.readLock(Inode.LockOperation.UNLOCK);}
+                return;
+            } else if (next.getClass().equals(VirtualInode.class)){
+                VirtualInode vnext = (VirtualInode) next;
+                String lockServerId = getLockServer(vnext);
+                remoteLock = new RemoteLock(lockServerId.split(":")[0], Integer.parseInt(lockServerId.split(":")[1]));
+                remoteLock.readlock(path);
+                break;
+            } else {
+                curr = (PhysicalInode) next;
+            }
+        }
+        osw.write("locked" + "\n");
+        osw.flush();
+        isr.readLine();
+        for(Inode i : locks){ i.readLock(Inode.LockOperation.UNLOCK);}
+        remoteLock.unlock(path);
+        osw.write("unlocked");
+        flushAndClose();
+    }
+
+    private String getLockServer(VirtualInode vnext) {
+        String serverId = vnext.getServerId();
+        String port = serverId.split(":")[1];
+        int lockserverPort = Integer.parseInt(port) + 1;
+        String lockServerId = serverId.split(":")[0] + lockserverPort;
+        return lockServerId;
+    }
+
+    public void cephHandleRequest() throws IOException {
 		String stuff = isr.readLine();
 		System.out.println(stuff);
 		if (stuff.startsWith("readlock")) {
 		    String path = stuff.split(" ")[1];
+            List<String> pathParts = Arrays.asList(path.split("/"));
+            pathParts.set(0, "/");
 		    if(cephServer.cephStorage.isRoot){
-		        List<String> pathParts = Arrays.asList(path.split("/"));
+		        LOGGER.info(pathParts.toString());
 		    	Result<List<Inode>> lockResult =cephServer.cephStorage.storage.lockRead(pathParts, pathParts.size());
 		    	if(!lockResult.isOperationSuccess()){
 		    		osw.write("Can't lock because " + lockResult.getOperationReturnMessage());
                     flushAndClose();
                     return;
 				}
-
                 osw.write("locked\n");
                 osw.flush();
                 isr.readLine();
@@ -70,7 +124,6 @@ public class LockRequestHandler implements Runnable {
                     flushAndClose();
                     return;
 				}
-                List<String> pathParts = Arrays.asList(result.getOperationReturnVal()[1].split("/"));
                 Result<List<Inode>> lockResult = cephServer.cephStorage.storage.lockRead(pathParts, pathParts.size());
                 if(!lockResult.isOperationSuccess()){
                     osw.write("Can't lock because " + lockResult.getOperationReturnMessage());
@@ -86,9 +139,10 @@ public class LockRequestHandler implements Runnable {
             }
 		} else if (stuff.startsWith("writelock")) {
             String path = stuff.split(" ")[1];
+            List<String> pathParts = Arrays.asList(path.split("/"));
+            pathParts.set(0, "/");
 			if(cephServer.cephStorage.isRoot){
-                List<String> pathParts = Arrays.asList(path.split("/"));
-                Result<List<Inode>> lockResult = cephServer.cephStorage.storage.lockRead(pathParts, pathParts.size()-2);
+                Result<List<Inode>> lockResult = cephServer.cephStorage.storage.lockRead(pathParts, pathParts.size()-1);
                 if(!lockResult.isOperationSuccess()){
                     osw.write("Can't lock because " + lockResult.getOperationReturnMessage());
                     flushAndClose();
@@ -99,7 +153,7 @@ public class LockRequestHandler implements Runnable {
                 Inode toBeWriteLocked = last.getChild(pathParts.get(pathParts.size()-1));
                 if(toBeWriteLocked == null || toBeWriteLocked.getClass() == VirtualInode.class){
                     for(Inode i : lockResult.getOperationReturnVal()){ i.readLock(Inode.LockOperation.UNLOCK);};
-                    osw.write("Can't lock because last node is virtual " + path + " # Virtual Host: " + ((VirtualInode) toBeWriteLocked).getServerId());
+                    osw.write("REDIRECT TO SERVER: " + ((VirtualInode) toBeWriteLocked).getServerId());
                     flushAndClose();
                     return;
                 }
@@ -119,7 +173,6 @@ public class LockRequestHandler implements Runnable {
                     flushAndClose();
                     return;
                 }
-                List<String> pathParts = Arrays.asList(result.getOperationReturnVal()[1].split("/"));
                 Result<List<Inode>> lockResult = cephServer.cephStorage.storage.lockRead(pathParts, pathParts.size()-2);
                 if(!lockResult.isOperationSuccess()){
                     osw.write("Can't lock because " + lockResult.getOperationReturnMessage());
@@ -131,7 +184,7 @@ public class LockRequestHandler implements Runnable {
                 Inode toBeWriteLocked = last.getChild(pathParts.get(pathParts.size()-1));
                 if(toBeWriteLocked == null || toBeWriteLocked.getClass() == VirtualInode.class){
                     for(Inode i : lockResult.getOperationReturnVal()){ i.readLock(Inode.LockOperation.UNLOCK);};
-                    osw.write("Can't lock because last node is virtual " + path + " # Virtual Host: " + ((VirtualInode) toBeWriteLocked).getServerId());
+                    osw.write("REDIRECT TO SERVER: " + ((VirtualInode) toBeWriteLocked).getServerId());
                     flushAndClose();
                     return;
                 }
@@ -162,7 +215,7 @@ public class LockRequestHandler implements Runnable {
 	@Override
 	public void run() {
 		try {
-			cephHandleRequest();
+			handleRequest();
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}

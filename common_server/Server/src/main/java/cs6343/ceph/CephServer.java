@@ -50,7 +50,7 @@ public class CephServer {
 	public CephServer(CephStorage cephStorage, int port) {
 		restTemplate=new RestTemplate();
 		this.cephStorage = cephStorage;
-		this.lockServer = new LockServer(this, port+1);
+		this.lockServer = new LockServer(this, port);
 		new Thread(lockServer).start();
 	}
 

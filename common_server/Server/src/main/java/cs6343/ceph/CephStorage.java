@@ -50,7 +50,7 @@ public class CephStorage extends Storage {
 
 	public CephStorage(boolean isRoot, String rootServerAddress, int port) {
 		this(isRoot, rootServerAddress, null);
-		this.cephServer = new CephServer(this, port+1);
+		this.cephServer = new CephServer(this, port);
 	}
 
 	public void init(PhysicalInode rootNode) {
@@ -136,6 +136,7 @@ public class CephStorage extends Storage {
 							nodeToMoveInode.setName(nodeToMoveInode.getPath());
 							if (this.cephServer.sendCreatePartition(json, serverNo)) {
 								nodeToMoveInode.setParent(parentInode);
+								nodeToMoveInode.setName(prevName); // set it back so names are correct
 								((PhysicalInode) parentInode).getChildren().remove(prevName);
 								VirtualInode vInode = new VirtualInode(nodeToMoveInode, serverNo);
 								((PhysicalInode) parentInode).addChild(vInode);
