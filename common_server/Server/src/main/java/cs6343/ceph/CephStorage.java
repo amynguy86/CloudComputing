@@ -1,10 +1,12 @@
 package cs6343.ceph;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import cs6343.RemoteLock;
 import cs6343.centralized.CentralizedStorage;
 import cs6343.data.PhysicalInode;
 import cs6343.data.VirtualInode;
@@ -24,6 +26,7 @@ public class CephStorage extends Storage {
 
 	public boolean isRoot;
 	String rootServerAddress;
+	String parentPath;
 
 	public String getRootServerAddress() {
 		return rootServerAddress;
@@ -61,6 +64,12 @@ public class CephStorage extends Storage {
 		 */
 		fixParentReferences(rootNode);
 		this.storage = new CentralizedStorage(rootNode);
+		String[] parts = rootNode.getPath().split("/");
+		String parentPath = "/";
+		for(int i = 0; i < parts.length-1; i++){
+			parentPath += parts[i];
+		}
+		this.parentPath = parentPath;
 		rootNode.writeLock(LockOperation.UNLOCK);
 	}
 
@@ -214,7 +223,9 @@ public class CephStorage extends Storage {
 				result.setOperationReturnMessage(isPathValid.getOperationReturnMessage());
 			} else {
 				// todo lock remotely first
+				RemoteLock lock = readLockParent();
 				result = this.storage.ls(isPathValid.getOperationReturnVal()[1]);
+				lock.unlock();
 			}
 		}
 		return result;
@@ -235,8 +246,9 @@ public class CephStorage extends Storage {
 				if (isPathValid.getOperationReturnVal()[1].equals(this.storage.getRoot().getName())) {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
-					// todo lock remotely first
+					RemoteLock lock = readLockParent();
 					result = this.storage.mkdir(isPathValid.getOperationReturnVal()[1]);
+					lock.unlock();
 				}
 			}
 		}
@@ -257,8 +269,9 @@ public class CephStorage extends Storage {
 				if (isPathValid.getOperationReturnVal()[1].equals(this.storage.getRoot().getName())) {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
-					// todo lock remotely first
+					RemoteLock lock = readLockParent();
 					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1]);
+					lock.unlock();
 				}
 			}
 		}
@@ -283,6 +296,12 @@ public class CephStorage extends Storage {
 		return null;
 	}
 
+	public RemoteLock readLockParent(){
+		RemoteLock lock = new RemoteLock(this.rootServerAddress.split(":")[0], Integer.parseInt(this.rootServerAddress.split(":")[1])+1);
+		lock.lock(this.parentPath);
+		return lock;
+	}
+
 	@Override
 	public Result<String> touch(String path) {
 		Result<String> result = new Result<>();
@@ -297,8 +316,9 @@ public class CephStorage extends Storage {
 				if (isPathValid.getOperationReturnVal()[1].equals(this.storage.getRoot().getName())) {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
-					// todo lock remotely first
+					RemoteLock lock = readLockParent();
 					result = this.storage.touch(isPathValid.getOperationReturnVal()[1]);
+					lock.unlock();
 				}
 			}
 		}

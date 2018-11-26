@@ -19,15 +19,8 @@ public class RemoteLock {
     }
 
 
-    public boolean readlock(String filename) {
-        return lock(filename, "readlock");
-    }
 
-    public boolean writeLock(String filename) {
-        return lock(filename, "writelock");
-    }
-
-    public boolean unlock(String filename){
+    public boolean unlock(){
         if(!locked){
             throw new IllegalArgumentException("Unlock called and nothing is locked");
         }
@@ -49,17 +42,19 @@ public class RemoteLock {
         }
     }
 
-    private boolean lock(String filename, String locktype){
+    public boolean lock(String filename){
         if(locked){
             throw new IllegalArgumentException("RemoteLock already called lock");
         }
         try {
+            System.out.println("Filename: " + filename + " hostname: " + hostname + " port: " + port);
             s = new Socket(hostname, port);
             osw = new OutputStreamWriter(s.getOutputStream());
             br = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            osw.write( locktype + " " + filename + "\n");
+            osw.write( filename + "\n");
             osw.flush();
             String response = br.readLine();
+            System.out.println(response);
             if(!"locked".equals(response)){
                 return false;
             }else {
