@@ -1,21 +1,40 @@
 package cs6343;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication
+@SpringBootApplication(exclude=CassandraDataAutoConfiguration.class)
+
 public class App implements CommandLineRunner {
-
+	
+	@Autowired 
+	IMetaData client; 
+	
     private static Logger LOG = LoggerFactory
             .getLogger(App.class);
 
     public static void main(String[] args) throws Exception{
-        App app = new App();
-        app.run(args);
+    	SpringApplication.run(App.class, args);
     }
 
+    //the clientType it gets from application.properties in resources, its a spring thing
+    @Bean
+    public IMetaData client(@Value("${cloud.client.type}") String clientType,@Value("${server}")String serverAddress) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		Class<?> clientClass = Class.forName(clientType);
+		Constructor constructor=clientClass.getConstructor(String.class);
+    	return (IMetaData)constructor.newInstance(serverAddress);
+    }
+    
     @Override
     public void run(String... args) throws Exception {
 //        TreeParser p = new TreeParser();
@@ -23,10 +42,10 @@ public class App implements CommandLineRunner {
 //        RandomTest test = new RandomTest(out, new LoggingMDS());
 //        test.walk(10, 100);
 //        test.destructiveWalk(5, 5, .25);
-        CentralizedMDS mds = new CentralizedMDS("http://localhost:8080/command");
-        mds.mkdir("/test");
-        mds.mkdir("/test/file");
-        System.out.println(mds.ls("/"));
-        System.out.println(mds.ls("/test"));
+        //CentralizedMDS mds = new CentralizedMDS("localhost:8080");
+        client.mkdir("/test");
+        client.mkdir("/test/file");
+        System.out.println(client.ls("/"));
+        System.out.println(client.ls("/test"));
     }
 }

@@ -15,9 +15,9 @@ public class CentralizedMDS implements IMetaData {
     private String path;
     private RestTemplate rest;
     private HttpHeaders headers;
-
+    
     public CentralizedMDS(String path){
-        this.path = path;
+        this.path = "http://"+path+"/command";
         this.rest = new RestTemplate();
         this.headers = new HttpHeaders();
         this.headers.add("content-type", "application/json");

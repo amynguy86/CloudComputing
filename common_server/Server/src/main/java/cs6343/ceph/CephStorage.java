@@ -164,7 +164,7 @@ public class CephStorage extends Storage {
 					if (unlockAtEnd)
 						parentInode.writeLock(LockOperation.UNLOCK);
 				} catch (RedirectException ex) {
-					result.setOperationReturnMessage("REDIRECT TO SERVER:" + parentInode.getServerId());
+					result.setOperationReturnMessage(CentralizedStorage.createRedirectMsg(parentInode));
 				}
 			}
 		} else {

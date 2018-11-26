@@ -223,28 +223,44 @@ public class CentralizedStorageTest {
 		
 		//ls
 		Result<String> result=storage1.ls("/ab/cd/ef");
+		System.out.println(result);
 		Assert.assertEquals(result.isOperationSuccess(), false);
-		String[] serverToGo =result.getOperationReturnMessage().split(":",2);
+		String[] serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
+		String[] path=result.getOperationReturnMessage().split("\n")[1].split(":",2);
+		
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
+		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
 		result=storage1.ls("/ab/cd/ef/fg/ge");
+		
 		Assert.assertEquals(result.isOperationSuccess(), false);
-		serverToGo =result.getOperationReturnMessage().split(":",2);
+		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
+		path=result.getOperationReturnMessage().split("\n")[1].split(":",2);
+		
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
+		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
 		//mkdir
 		result=storage1.mkdir("/ab/cd/ef/fg/");
 		Assert.assertEquals(result.isOperationSuccess(), false);
-		serverToGo =result.getOperationReturnMessage().split(":",2);
+		System.out.println(result);
+		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
+		path=result.getOperationReturnMessage().split("\n")[1].split(":",2);
+		
+		
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
+		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
 		result=storage1.mkdir("/ab/cd/hh");
 		Assert.assertEquals(result.isOperationSuccess(), true);
 		
 		result=storage1.mkdir("/ab/cd/ef/fg/hh");
 		Assert.assertEquals(result.isOperationSuccess(), false);
-		serverToGo =result.getOperationReturnMessage().split(":",2);
+		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
+		path=result.getOperationReturnMessage().split("\n")[1].split(":",2);
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
+		Assert.assertEquals(path[1], " /ab/cd/ef");
+		
 		
 		result=storage1.mkdir("/ab/cd/ef/");
 		Assert.assertEquals(result.isOperationSuccess(), false);
@@ -252,10 +268,12 @@ public class CentralizedStorageTest {
 		
 		
 		//rmdir
-		result=storage1.rmdir("/ab/cd/ef/");
+		result=storage1.rmdir("/ab/cd/ef");
 		Assert.assertEquals(result.isOperationSuccess(), false);
-		serverToGo =result.getOperationReturnMessage().split(":",2);
+		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
+		path=result.getOperationReturnMessage().split("\n")[1].split(":",2);
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
+		Assert.assertEquals(path[1], " /ab/cd/ef");
 	}
 	
 }

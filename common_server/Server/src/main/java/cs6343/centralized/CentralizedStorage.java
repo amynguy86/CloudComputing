@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
-
 import cs6343.data.FileType;
 import cs6343.data.PhysicalInode;
 import cs6343.data.MetaData;
@@ -140,12 +137,10 @@ public class CentralizedStorage extends Storage {
 
 			result.setOperationSuccess(false);
 			result.setOperationReturnVal(list);
-			StringBuilder partialPath = new StringBuilder();
 
 			try {
 				inode.readLock(LockOperation.LOCK);
 				list.add(inode);
-				partialPath.append(inode.getName());
 
 				if (!inode.getName().equals(path.get(0))) {
 					result.setOperationReturnMessage("First directory in path: " + path.get(0)
@@ -164,12 +159,9 @@ public class CentralizedStorage extends Storage {
 					}
 					inode.readLock(LockOperation.LOCK);
 					list.add(inode);
-					partialPath.append(inode.getName());
-					partialPath.append("/");
-
 				}
 			} catch (RedirectException ex) {
-				result.setOperationReturnMessage("REDIRECT TO SERVER:" + inode.getServerId() + "\n FOR PATH: " + partialPath.toString() + "/" + inode.getName());
+				result.setOperationReturnMessage(createRedirectMsg(inode));
 				return result;
 
 			}
@@ -177,7 +169,11 @@ public class CentralizedStorage extends Storage {
 		result.setOperationSuccess(true);
 		return result;
 	}
-
+	
+	public static String createRedirectMsg(Inode inode) {
+		String msg="REDIRECT TO SERVER:" + inode.getServerId() + "\n FOR PATH: " + inode.getPath();
+		return msg;
+	}
 	/*
 	 * Return list of unlockedNodes, these nodes MUST have been locked!
 	 */
@@ -255,7 +251,7 @@ public class CentralizedStorage extends Storage {
 					if (unlockAtEnd)
 						parentInode.writeLock(LockOperation.UNLOCK);
 				} catch (RedirectException ex) {
-					result.setOperationReturnMessage("REDIRECT TO SERVER:" + parentInode.getServerId());
+					result.setOperationReturnMessage(createRedirectMsg(parentInode));
 				}
 			}
 		} else
@@ -320,7 +316,7 @@ public class CentralizedStorage extends Storage {
 					if (dirToDeleteInode != null) {
 						if (!isPhysicalNode(dirToDeleteInode)) {
 							//Todo send to mars
-							result.setOperationReturnMessage("REDIRECT TO SERVER:" + dirToDeleteInode.getServerId());
+							result.setOperationReturnMessage(createRedirectMsg(dirToDeleteInode));
 							
 						} else {
 							((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());
@@ -333,7 +329,7 @@ public class CentralizedStorage extends Storage {
 					if (unlockAtEnd)
 						parentInode.writeLock(LockOperation.UNLOCK);
 				} catch (RedirectException ex) {
-					result.setOperationReturnMessage("REDIRECT TO SERVER:" + parentInode.getServerId());
+					result.setOperationReturnMessage(createRedirectMsg(parentInode));
 				} catch (OperationNotSupportedException ex) {
 					result.setOperationReturnMessage(ex.getMessage());
 					if (unlockAtEnd)
