@@ -8,7 +8,6 @@ import org.springframework.web.client.RestTemplate;
 
 import cs6343.RemoteLock;
 import cs6343.data.PhysicalInode;
-import cs6343.iface.Inode.LockOperation;
 import cs6343.util.Result;
 
 public class CephServer {
