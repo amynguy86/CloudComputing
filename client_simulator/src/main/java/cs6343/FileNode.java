@@ -38,20 +38,22 @@ public class FileNode {
         return filename;
     }
 
-    //pretty sure this doesn't completely remove the entry
+
 
     public void removeSubFile(FileNode subfile){
         if(subFiles != null){
-            subFiles.put(subfile.filename, null);
+            removeSubFileByName(subfile.getFileName());
+          //  subFiles.put(subfile.filename, null);  //this doesn't fully remove entry
         }
     }
 
-    public void removeSubFileByName(String name)
+    public boolean removeSubFileByName(String name) //returns true if deletion successful
     {
         if(subFiles!=null)
         {
-            subFiles.remove(this.getSubFile(name));
+            return subFiles.remove(name)!=null;
         }
+        return false;
     }
 
     public String prettyPrint(String prefix){

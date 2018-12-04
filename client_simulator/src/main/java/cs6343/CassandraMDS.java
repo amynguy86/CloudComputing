@@ -11,13 +11,21 @@ public class CassandraMDS implements IMetaData {
     public CassandraMDS(String IPAddress)
     {
         cc=new CassConnector(IPAddress);
+
+    }
+
+    public void configureDB()
+    {
         cc.configureDB();
         FileNode root=new FileNode("/",true);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         cc.insert("/",gson.toJson(root));
     }
-
+    public void disconnect()
+    {
+        cc.shutdown();
+    }
     public boolean mkdir(String dirName)
     {
         FileNode newFile= new FileNode(dirName, true);
@@ -93,13 +101,16 @@ public class CassandraMDS implements IMetaData {
     public boolean rm(String filePath)
     {
         //remove file
-        FileNode newFile= new FileNode(filePath, true);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         boolean fileDeleted=cc.delete(filePath);
-        //find parent and add directory to its subfiles list
+        //find parent and remove directory from its subfiles list
         int lastIndex=filePath.lastIndexOf("/");
         String parentDir=filePath.substring(0,lastIndex);
+        if(parentDir.equals("")) //parent directory is root
+        {
+            parentDir="/";
+        }
         String parentString=cc.read(parentDir);
         if(parentString!=null) //parent exists
         {
@@ -107,11 +118,16 @@ public class CassandraMDS implements IMetaData {
             parentNode.removeSubFileByName(filePath);
             cc.edit(parentDir, gson.toJson(parentNode));
         }
+        else
+        {
+            fileDeleted=false;
+        }
         return fileDeleted;
     }
     //needs to recursively delete subdirectories
     public boolean rmdir(String dirname)
     {
+
         return false;
     }
 }
