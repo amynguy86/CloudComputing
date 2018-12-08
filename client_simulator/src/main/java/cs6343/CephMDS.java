@@ -36,7 +36,7 @@ public class CephMDS implements IMetaData {
 		private Node root;
 
 		CephCache(String rootServer) {
-			root = new Node("/", "rootServer");
+			root = new Node("/", rootServer);
 		}
 
 		public Node get(String path) {

@@ -18,8 +18,12 @@ import org.springframework.context.annotation.Bean;
 public class App implements CommandLineRunner {
 	
 	@Autowired 
-	IMetaData client; 
-	
+	IMetaData client;
+
+
+    @Autowired
+    StatCollector collector;
+
     private static Logger LOG = LoggerFactory
             .getLogger(App.class);
 
@@ -27,12 +31,17 @@ public class App implements CommandLineRunner {
     	SpringApplication.run(App.class, args);
     }
 
+    @Bean
+    public StatCollector collector(){
+        return new StatCollector();
+    }
+
     //the clientType it gets from application.properties in resources, its a spring thing
     @Bean
-    public IMetaData client(@Value("${cloud.client.type}") String clientType,@Value("${server}")String serverAddress) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+    public IMetaData client(@Value("${cloud.client.type}") String clientType,@Value("${server}")String serverAddress, StatCollector collector) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Class<?> clientClass = Class.forName(clientType);
 		Constructor constructor=clientClass.getConstructor(String.class);
-    	return new TimedMDS((IMetaData)constructor.newInstance(serverAddress), clientType);
+    	return new TimedMDS((IMetaData)constructor.newInstance(serverAddress), clientType, collector);
     }
     
     @Override
@@ -47,5 +56,11 @@ public class App implements CommandLineRunner {
         client.mkdir("/test/file");
         System.out.println(client.ls("/"));
         System.out.println(client.ls("/test"));
+        System.out.println(collector.getSummaryStatistics(Operation.LS));
+        System.out.println(collector.getSummaryStatistics(Operation.MKDIR));
+        System.out.println(collector.getSummaryStatistics(Operation.TOUCH));
+        System.out.println(collector.getSummaryStatistics(Operation.RM));
+        System.out.println(collector.getSummaryStatistics(Operation.RMDIR));
+        System.exit(0);
     }
 }
