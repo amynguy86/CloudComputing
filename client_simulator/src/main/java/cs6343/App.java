@@ -32,7 +32,7 @@ public class App implements CommandLineRunner {
     public IMetaData client(@Value("${cloud.client.type}") String clientType,@Value("${server}")String serverAddress) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Class<?> clientClass = Class.forName(clientType);
 		Constructor constructor=clientClass.getConstructor(String.class);
-    	return (IMetaData)constructor.newInstance(serverAddress);
+    	return new TimedMDS((IMetaData)constructor.newInstance(serverAddress), clientType);
     }
     
     @Override
