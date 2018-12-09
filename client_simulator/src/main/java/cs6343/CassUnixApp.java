@@ -5,6 +5,8 @@ public class CassUnixApp {
 
 CassandraMDS cmds = new CassandraMDS("127.0.0.1");
 cmds.configureDB();
+
+
 cmds.mkdir("/test1dir");
 cmds.mkdir("/test1dir/test2dir");
 cmds.mkdir("/test3dir");

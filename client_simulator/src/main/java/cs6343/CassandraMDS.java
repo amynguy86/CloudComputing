@@ -8,9 +8,13 @@ import java.util.ArrayList;
 import java.util.Set;
 public class CassandraMDS implements IMetaData {
     CassConnector cc;
+    String lockHost="127.0.0.1";
+    int lockPort=6969;
     public CassandraMDS(String IPAddress)
     {
         cc=new CassConnector(IPAddress);
+        RemoteLock lock = new RemoteLock(lockHost,lockPort);
+        lock.writeLock("/root/file1");
 
     }
 
@@ -38,21 +42,39 @@ public class CassandraMDS implements IMetaData {
         {
             parentDir="/";
         }
-        String parentString=cc.read(parentDir);
+        String parentString=cc.read(parentDir); //check that parent exists
+
         if(parentString==null) //parent directory does not exist
         {
             return false;
         }
         //add directory to the system
-        boolean fileAdded=cc.insert(dirName, gson.toJson(newFile));
+        RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
+        lock1.writeLock(dirName);
+        boolean fileAdded=cc.insert(dirName, gson.toJson(newFile));//don't need read lock here, just checking that file exists
+        lock1.unlock(dirName);
         if(!fileAdded)  //file already exists in system
         {
             return false;
         }
         //add directory to parent's list of subfiles
+        RemoteLock lock2 = new RemoteLock(lockHost,lockPort);
+        lock2.writeLock(parentDir);
+        parentString=cc.read(parentDir);  //check that parent still exists and store it to add to subfiles list
+        if(parentString==null)//parent was deleted since we last checked, need to undo file addition
+        {
+            RemoteLock lock3 = new RemoteLock(lockHost,lockPort);
+            lock3.writeLock(dirName);
+            cc.delete(dirName);
+            lock3.unlock(dirName);
+            lock2.unlock(parentDir);
+            return false;
+        }
+
         FileNode parentNode=gson.fromJson(parentString,FileNode.class);
         parentNode.addSubFile(newFile);
         cc.edit(parentDir, gson.toJson(parentNode));
+        lock2.unlock(parentDir);
         return true;
 
     }
@@ -130,4 +152,5 @@ public class CassandraMDS implements IMetaData {
 
         return false;
     }
+
 }
