@@ -40,12 +40,12 @@ public class CephStorage extends Storage {
 		if (isRoot) {
 			logger.info("Initializing root Ceph Storage");
 			storage = new CentralizedStorage("/");
-			this.isRoot=true;
+			this.isRoot = true;
 		} else {
 			logger.info("Initializing Ceph Storage(not root)");
-			//Initialize with a fake node
-			storage = null; 
-			this.isRoot=false;
+			// Initialize with a fake node
+			storage = null;
+			this.isRoot = false;
 		}
 		this.rootServerAddress = rootServerAddress;
 		this.cephServer = cephServer;
@@ -65,11 +65,12 @@ public class CephStorage extends Storage {
 		fixParentReferences(rootNode);
 		this.storage = new CentralizedStorage(rootNode);
 		String[] parts = rootNode.getPath().split("/");
-		String parentPath = "/";
-		for(int i = 0; i < parts.length-1; i++){
-			parentPath += parts[i];
+		String parentPath = "";
+		for (int i = 1; i < parts.length - 1; i++) {
+			parentPath += "/" + parts[i];
 		}
-		this.parentPath = parentPath;
+		this.parentPath = parentPath.length() == 0 ? "/" : parentPath;
+		logger.info("Parent Path:" + this.parentPath);
 		rootNode.writeLock(LockOperation.UNLOCK);
 	}
 
@@ -78,10 +79,13 @@ public class CephStorage extends Storage {
 		node.setParent(null);
 		stack.push(node); // BFS would have been better
 		while (stack.size() != 0) {
-			PhysicalInode tmp = (PhysicalInode) stack.pop();
-			for (Inode child : tmp.getChildren().values()) {
-				child.setParent(tmp);
-				stack.push(child);
+			Inode inode = stack.pop();
+			if (CentralizedStorage.isPhysicalNode(inode)) {
+				PhysicalInode tmp = (PhysicalInode) inode;
+				for (Inode child : tmp.getChildren().values()) {
+					child.setParent(tmp);
+					stack.push(child);
+				}
 			}
 		}
 	}
@@ -89,10 +93,6 @@ public class CephStorage extends Storage {
 	@Override
 	public Result<String> partition(String data) {
 		logger.info("Executing Command partition, data: {}", data);
-		return partition(data, true);
-	}
-
-	public Result<String> partition(String data, boolean unlockAtEnd) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		String[] tokenizer = data.split(" ");
@@ -104,6 +104,26 @@ public class CephStorage extends Storage {
 
 		String serverNo = tokenizer[1];
 		String path = tokenizer[0];
+
+		if (this.isRoot) {
+			return this.partition(path, serverNo, true);
+		} else {
+			Result<String[]> isPathValid = validateCephPath(path);
+			if (!isPathValid.isOperationSuccess()) {
+				result.setOperationReturnMessage(isPathValid.getOperationReturnMessage());
+			} else {
+				RemoteLock lock = readLockParent();
+				result = this.partition(isPathValid.getOperationReturnVal()[1], serverNo, true);
+				lock.unlock();
+			}
+		}
+		return result;
+	}
+
+	public Result<String> partition(String path, String serverToMove, boolean unlockAtEnd) {
+		Result<String> result = new Result<>();
+		result.setOperationSuccess(false);
+		String serverNo = serverToMove;
 		List<String> list = storage.getPathAsList(path);
 
 		if (list == null || list.size() < 2) {
@@ -140,9 +160,7 @@ public class CephStorage extends Storage {
 							String json = PhysicalInode.toJson((PhysicalInode) nodeToMoveInode);
 							nodeToMoveInode.setParent(parentInode);
 							String prevName = nodeToMoveInode.getName();
-							//Set the name and path to be the same, the fact that the root server has '/' as both it's
-							//name and path is used in multiple places
-							nodeToMoveInode.setName(nodeToMoveInode.getPath());
+							nodeToMoveInode.setName(nodeToMoveInode.getName());
 							if (this.cephServer.sendCreatePartition(json, serverNo)) {
 								nodeToMoveInode.setParent(parentInode);
 								nodeToMoveInode.setName(prevName); // set it back so names are correct
@@ -194,16 +212,16 @@ public class CephStorage extends Storage {
 	public Result<String[]> validateCephPath(String path) {
 		Result<String[]> result = new Result<>();
 		result.setOperationSuccess(false);
-		String cephPath[] = path.split("%",2);
+		String cephPath[] = path.split("%", 2);
 
-		if (cephPath.length != 2 && path.charAt(path.length()-1)!='%') {
+		if (cephPath.length != 2 && path.charAt(path.length() - 1) != '%') {
 			result.setOperationReturnMessage(
 					"Invalid Path, CephPath to a server containing a partition is something like /a/b/c%d/e/f");
 		} else if (!cephPath[0].equals(this.storage.getRoot().getPath())) {
-		    logger.error(this.storage.getRoot().getPath());
+			logger.error(this.storage.getRoot().getPath());
 			result.setOperationReturnMessage("Path " + cephPath[0] + " does not reside on this server");
 		} else {
-			cephPath[1] = cephPath.length<2 || cephPath[1].length() == 0 ? this.storage.getRoot().getName()
+			cephPath[1] = cephPath.length < 2 || cephPath[1].length() == 0 ? this.storage.getRoot().getName()
 					: this.storage.getRoot().getName() + "/" + cephPath[1];
 			result.setOperationSuccess(true);
 			result.setOperationReturnVal(cephPath);
@@ -231,7 +249,6 @@ public class CephStorage extends Storage {
 		return result;
 	}
 
-	
 	@Override
 	public Result<String> mkdir(String path) {
 		Result<String> result = new Result<>();
@@ -296,8 +313,9 @@ public class CephStorage extends Storage {
 		return null;
 	}
 
-	public RemoteLock readLockParent(){
-		RemoteLock lock = new RemoteLock(this.rootServerAddress.split(":")[0], Integer.parseInt(this.rootServerAddress.split(":")[1])+1);
+	public RemoteLock readLockParent() {
+		RemoteLock lock = new RemoteLock(this.rootServerAddress.split(":")[0],
+				Integer.parseInt(this.rootServerAddress.split(":")[1]) + 1);
 		lock.lock(this.parentPath);
 		return lock;
 	}

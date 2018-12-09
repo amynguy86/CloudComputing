@@ -153,7 +153,7 @@ public class CentralizedStorage extends Storage {
 
 					inode = ((PhysicalInode) inode).getChild(path.get(i));
 
-					if (inode == null || (this.isPhysicalNode(inode) && inode.getMetaData().getType() == FileType.FILE)) {
+					if (inode == null || (this.isPhysicalNode(inode) && ((PhysicalInode)inode).getMetaData().getType() == FileType.FILE)) {
 						result.setOperationReturnMessage("Unable to find DIR:" + path.get(i));
 						return result;
 					}
@@ -228,7 +228,7 @@ public class CentralizedStorage extends Storage {
 			else
 				parentInode = this.root;
 
-			if (parentInode == null || (isPhysicalNode(parentInode) && parentInode.getMetaData().getType() == FileType.FILE))
+			if (parentInode == null || (isPhysicalNode(parentInode) && ((PhysicalInode)parentInode).getMetaData().getType() == FileType.FILE))
 				result.setOperationReturnMessage("DIR NOT FOUND:" + parentDir);
 			else {
 				try {

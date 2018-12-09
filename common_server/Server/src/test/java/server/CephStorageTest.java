@@ -72,7 +72,7 @@ public class CephStorageTest {
 		cephStorage.init(storage.getRoot());
 
 		PhysicalInode transferNode = CentralizedStorageTest.getDirInPath("/ab/cd/ef/zh", 4, storage.getRoot());
-		Result<String> result = cephStorage.partition("/ab/cd/ef/zh " + "someurlsend", false);
+		Result<String> result = cephStorage.partition("/ab/cd/ef/zh " , "someurlsend", false);
 		Assert.assertEquals(result.isOperationSuccess(), true);
 
 		// Test Locking

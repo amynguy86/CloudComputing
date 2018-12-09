@@ -1,5 +1,7 @@
 package cs6343.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cs6343.iface.Inode;
 import cs6343.util.RedirectException;
 
@@ -10,6 +12,7 @@ public class VirtualInode implements Inode {
 	private String name;
 	private String serverId;
 	private String path;
+	@JsonIgnore
 	private Inode parent;
 
 	public VirtualInode() {
@@ -73,12 +76,6 @@ public class VirtualInode implements Inode {
 	@Override
 	public void setParent(Inode parent) {
 		this.parent = parent;
-	}
-
-	@Override
-	public MetaData getMetaData() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

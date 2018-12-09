@@ -32,8 +32,6 @@ public interface Inode {
 
 	public void setParent(Inode parent);
 
-	MetaData getMetaData();
-
 	public enum LockOperation {
 		LOCK, UNLOCK
 	}

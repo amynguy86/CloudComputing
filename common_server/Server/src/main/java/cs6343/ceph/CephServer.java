@@ -1,9 +1,9 @@
 package cs6343.ceph;
 
-
 import cs6343.LockServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import cs6343.RemoteLock;
@@ -17,14 +17,14 @@ public class CephServer {
 	RestTemplate restTemplate;
 	LockServer lockServer;
 
-
 	public static class ServerRequest {
 		private String command;
 		private String data;
-		
+
 		public ServerRequest() {
-			
+
 		}
+
 		public ServerRequest(String command, String data) {
 			this.command = command;
 			this.data = data;
@@ -48,21 +48,22 @@ public class CephServer {
 	}
 
 	public CephServer(CephStorage cephStorage, int port) {
-		restTemplate=new RestTemplate();
+		restTemplate = new RestTemplate();
 		this.cephStorage = cephStorage;
 		this.lockServer = new LockServer(this, port);
 		new Thread(lockServer).start();
 	}
 
 	/*
-	 * Before this the node preceding this partition must be writelocked 
+	 * Before this the node preceding this partition must be writelocked
 	 */
 	public Result<String> createPartition(String data) {
 		Result<String> rslt = new Result<String>();
 		rslt.setOperationSuccess(false);
-		if (this.cephStorage.storage!=null) {
+		if (this.cephStorage.storage != null) {
 			logger.error("There is already a partiton {} on this server", this.cephStorage.storage.getRoot().getPath());
-			rslt.setOperationReturnMessage("There is already a partiton on this server:"+ this.cephStorage.storage.getRoot().getPath());
+			rslt.setOperationReturnMessage(
+					"There is already a partiton on this server:" + this.cephStorage.storage.getRoot().getPath());
 			return rslt;
 		}
 		PhysicalInode rootInode = PhysicalInode.fromJson(data);
@@ -78,15 +79,30 @@ public class CephServer {
 	}
 
 	public boolean sendCreatePartition(String data, String serverName) {
-		Result<String> result=restTemplate.postForObject("http://"+serverName+"/ceph",new ServerRequest("createPartition",data) , Result.class);
+		Result<String> result;
+		try {
+			result = restTemplate.postForObject("http://" + serverName + "/ceph",
+					new ServerRequest("createPartition", data), Result.class);
+		} catch (RestClientException ex) {
+			ex.printStackTrace();
+			return false;
+		}
+
 		return result.isOperationSuccess();
 	}
-	
+
 	/*
-	 * Before this the node preceding this partition must be writelocked 
+	 * Before this the node preceding this partition must be writelocked
 	 */
 	public boolean sendRemovePartition(String data, String serverName) {
-		Result<String> result=restTemplate.postForObject("http://"+serverName+"/ceph",new ServerRequest("removePartition",data) , Result.class);
+		Result<String> result;
+		try {
+			result = restTemplate.postForObject("http://" + serverName + "/ceph",
+					new ServerRequest("removePartition", data), Result.class);
+		} catch (RestClientException ex) {
+			ex.printStackTrace();
+			return false;
+		}
 		return result.isOperationSuccess();
 	}
 }
