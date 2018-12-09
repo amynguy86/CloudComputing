@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration;
@@ -35,7 +34,7 @@ public class App {
 	private static Logger LOG = LoggerFactory.getLogger(App.class);
 
 	public static void main(String[] args) throws Exception {
-		ConfigurableApplicationContext cntx = SpringApplication.run(App.class, args);
+		SpringApplication.run(App.class, args);
 	}
 
 	@Bean
@@ -43,8 +42,6 @@ public class App {
 		return new StatCollector();
 	}
 
-	// the clientType it gets from application.properties in resources, its a spring
-	// thing
 	@Bean
 	public IMetaData client(@Value("${cloud.client.type}") String clientType, @Value("${server}") String serverAddress,
 			StatCollector collector) throws ClassNotFoundException, InstantiationException, IllegalAccessException,
