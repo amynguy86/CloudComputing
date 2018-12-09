@@ -315,8 +315,8 @@ public class CentralizedStorage extends Storage {
 					dirToDeleteInode = ((PhysicalInode) parentInode).getChild(dirToDelete);
 					if (dirToDeleteInode != null) {
 						if (!isPhysicalNode(dirToDeleteInode)) {
-							//Todo send to mars
-							result.setOperationReturnMessage(createRedirectMsg(dirToDeleteInode));
+							//Todo send to other server
+							result.setOperationReturnMessage("NOT IMPLEMENTED YET");
 							
 						} else {
 							((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());

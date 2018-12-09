@@ -38,6 +38,7 @@ public class App {
 		storage.mkdir("/a");
 		storage.mkdir("/a/c");
 		storage.mkdir("/a/d");
+		storage.mkdir("/a/d/e");
 		storage.mkdir("/b");
 		storage.mkdir("/b/e");
 		storage.mkdir("/b/f");
