@@ -20,7 +20,6 @@ public class CassandraMDS implements IMetaData {
 
     public void configureDB()
     {
-        System.out.println("Emptying database.");
         cc.configureDB();
         FileNode root=new FileNode("/",true);
         GsonBuilder builder = new GsonBuilder();
