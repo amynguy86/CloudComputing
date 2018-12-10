@@ -13,6 +13,7 @@ public class StatCollector {
         statMap.put(Operation.TOUCH, new ArrayList<>());
         statMap.put(Operation.RM, new ArrayList<>());
         statMap.put(Operation.RMDIR, new ArrayList<>());
+        statMap.put(Operation.PARTITION, new ArrayList<>());
     }
 
 
@@ -30,5 +31,5 @@ public class StatCollector {
 }
 
 enum Operation{
-    LS,MKDIR,TOUCH,RM,RMDIR;
+    LS,MKDIR,TOUCH,RM,RMDIR,PARTITION;
 }

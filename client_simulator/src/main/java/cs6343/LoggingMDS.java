@@ -31,4 +31,11 @@ public class LoggingMDS implements IMetaData {
         System.out.println("RMDIR: " + dirname);
         return false;
     }
+
+	@Override
+	public boolean partition(String data) {
+		// TODO Auto-generated method stub
+	      System.out.println("Partition: " + data);
+		return false;
+	}
 }

@@ -8,4 +8,5 @@ public interface IMetaData {
     public boolean touch(String filePath);
     public boolean rm(String filePath);
     public boolean rmdir(String dirname);
+    public boolean partition(String data);
 }

@@ -61,4 +61,10 @@ public class CentralizedMDS implements IMetaData {
         JsonObject obj = parser.parse(responseEntity.getBody()).getAsJsonObject();
         return obj.getAsJsonPrimitive("operationSuccess").getAsBoolean();
     }
+
+	@Override
+	public boolean partition(String data) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

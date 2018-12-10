@@ -217,4 +217,10 @@ public class CassandraMDS implements IMetaData {
         }
         cc.delete(path);
     }
+
+	@Override
+	public boolean partition(String data) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

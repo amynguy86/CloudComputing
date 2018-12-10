@@ -320,4 +320,40 @@ public class CephMDS implements IMetaData {
 			}
 		}
 	}
+
+	@Override
+	public boolean partition(String data) {
+		String[] tokenizer = data.split(",");
+
+		if (tokenizer.length != 2) {
+			logger.info("Incorrect format");
+			return false;
+		}
+
+		String dirName=tokenizer[0];
+		String server=tokenizer[1];
+		
+		Node node = this.cache.get(dirName);
+		while (true) {
+			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "partition " + node.path + " "+server,
+					Result.class);
+
+			if (result.isOperationSuccess())
+				return true;
+
+			if (isRedirect(result.getOperationReturnMessage())) {
+				this.updateCache(result);
+				node = this.cache.get(dirName);
+			} else if (isWrongServerErr(result.getOperationReturnMessage())) {
+				// CacheMiss
+				logger.info("CacheMiss: Server: {} Path: {}", node.val, node.path);
+				this.cache.remove(node.path);
+				node.path = dirName;
+				node.val = this.rootServer;
+			} else {
+				logger.error(result.getOperationReturnMessage());
+				return false;
+			}
+		}
+	}
 }

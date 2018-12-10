@@ -27,8 +27,8 @@ public class CommandLine {
 				String toPrint;
 				switch (cmd) {
 				case "ls":
-					List list=client.ls(args[1]);
-					if(list!=null)
+					List list = client.ls(args[1]);
+					if (list != null)
 						logger.info(list.toString());
 					break;
 				case "mkdir":
@@ -39,6 +39,26 @@ public class CommandLine {
 					break;
 				case "rmdir":
 					if (client.rmdir(args[1]))
+						logger.info("Success");
+					else
+						logger.info("Fail");
+					break;
+
+				case "touch":
+					if (client.touch(args[1]))
+						logger.info("Success");
+					else
+						logger.info("Fail");
+					break;
+
+				case "rm":
+					if (client.rm(args[1]))
+						logger.info("Success");
+					else
+						logger.info("Fail");
+					break;
+				case "partition":
+					if (client.partition(args[1]))
 						logger.info("Success");
 					else
 						logger.info("Fail");
