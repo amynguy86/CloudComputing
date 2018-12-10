@@ -6,19 +6,29 @@ public class CassUnixApp {
 CassandraMDS cmds = new CassandraMDS("127.0.0.1");
 cmds.configureDB();
 
+if(args.length!=0 && args[0].equals("commandline"))
+{
 
-cmds.mkdir("/test1dir");
-cmds.mkdir("/test1dir/test2dir");
-cmds.mkdir("/test3dir");
-cmds.touch("/test1dir/file1");
-cmds.touch("/test1dir/file2");
+}
+else {
 
-System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-System.out.println(cmds.ls("/test1dir"));
-cmds.rm("/test1dir/file1");
-System.out.println(cmds.ls("/test1dir"));
+    System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    cmds.mkdir("/a");
+  //  cmds.mkdir("/b");
+    cmds.mkdir("/a/aa");
+    cmds.mkdir("/a/ab");
+    cmds.mkdir("/a/aa/aaa");
+    cmds.mkdir("/a/ab/aaa");
+    cmds.mkdir("/a/aa/aaa/aaaa");
+    System.out.println(cmds.ls("/a/aa/aaa"));
+    cmds.rmdir("/a");
+    System.out.println(cmds.ls("/a/aa/aaa"));
+    System.out.println(cmds.ls("/"));
+
+
+}
 cmds.disconnect();
     }
 }

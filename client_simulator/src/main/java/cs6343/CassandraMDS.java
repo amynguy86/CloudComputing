@@ -26,18 +26,85 @@ public class CassandraMDS implements IMetaData {
         Gson gson = builder.create();
         cc.insert("/",gson.toJson(root));
     }
+
     public void disconnect()
     {
         cc.shutdown();
     }
+
     public boolean mkdir(String dirName)
     {
-        FileNode newFile= new FileNode(dirName, true);
+        return addFile(dirName,true);
+    }
+
+    public List<String> ls(String dirName)
+    {
+        RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
+        lock1.readlock(dirName);
+        String dirString=cc.read(dirName);
+        lock1.unlock(dirName);
+        if(dirString==null)//directory not found
+        {
+            return null;
+        }
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        FileNode fileNode=gson.fromJson(dirString, FileNode.class);
+        Map<String, FileNode> subFiles=fileNode.getSubFiles();
+        Set<String> keys=subFiles.keySet();
+        List<String> subfileList = new ArrayList<String>();
+        subfileList.addAll(keys);
+        return subfileList;
+    }
+
+
+    public boolean touch(String filePath)
+    {
+        return addFile(filePath,false);
+    }
+
+    public boolean rm(String filePath)
+    {
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        boolean fileDeleted=true;
+        //find parent and remove file from its subfiles list
+        int lastIndex=filePath.lastIndexOf("/");
+        String parentDir=filePath.substring(0,lastIndex);
+        if(parentDir.equals("")) //parent directory is root
+        {
+            parentDir="/";
+        }
+        RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
+        lock1.writeLock(parentDir);
+        String parentString=cc.read(parentDir);
+        if(parentString!=null) //parent exists
+        {
+            FileNode parentNode=gson.fromJson(parentString,FileNode.class);
+            parentNode.removeSubFileByName(filePath);
+            cc.edit(parentDir, gson.toJson(parentNode));
+        }
+        else
+        {
+            lock1.unlock(parentDir);
+            return false;  //parent did not exist
+        }
+        lock1.unlock(parentDir);
+        RemoteLock lock2 = new RemoteLock(lockHost,lockPort);
+        lock2.writeLock(filePath);
+        fileDeleted=cc.delete(filePath);  //set to false if file didn't exist, true if exists and was deleted
+        lock2.unlock(filePath);
+        return fileDeleted;
+    }
+
+    private boolean addFile(String path, boolean isDirectory)
+    {
+        FileNode newFile= new FileNode(path, isDirectory);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         //find parent directory
-        int lastIndex=dirName.lastIndexOf("/");
-        String parentDir=dirName.substring(0,lastIndex);  //if parent is root using this sets parentDir to an empty string
+        int lastIndex=path.lastIndexOf("/");
+        String parentDir=path.substring(0,lastIndex);  //if parent is root using this sets parentDir to an empty string
         if(parentDir.equals("")) //parent directory is root
         {
             parentDir="/";
@@ -50,9 +117,9 @@ public class CassandraMDS implements IMetaData {
         }
         //add directory to the system
         RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
-        lock1.writeLock(dirName);
-        boolean fileAdded=cc.insert(dirName, gson.toJson(newFile));//don't need read lock here, just checking that file exists
-        lock1.unlock(dirName);
+        lock1.writeLock(path);
+        boolean fileAdded=cc.insert(path, gson.toJson(newFile));
+        lock1.unlock(path);
         if(!fileAdded)  //file already exists in system
         {
             return false;
@@ -64,13 +131,12 @@ public class CassandraMDS implements IMetaData {
         if(parentString==null)//parent was deleted since we last checked, need to undo file addition
         {
             RemoteLock lock3 = new RemoteLock(lockHost,lockPort);
-            lock3.writeLock(dirName);
-            cc.delete(dirName);
-            lock3.unlock(dirName);
+            lock3.writeLock(path);
+            cc.delete(path);
+            lock3.unlock(path);
             lock2.unlock(parentDir);
             return false;
         }
-
         FileNode parentNode=gson.fromJson(parentString,FileNode.class);
         parentNode.addSubFile(newFile);
         cc.edit(parentDir, gson.toJson(parentNode));
@@ -78,79 +144,77 @@ public class CassandraMDS implements IMetaData {
         return true;
 
     }
-    public List<String> ls(String dirName)
+
+    //returns true if directory was successfully removed
+    public boolean rmdir(String dirName)
     {
-        String dirString=cc.read(dirName);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
-        FileNode fileNode=gson.fromJson(dirString, FileNode.class);
-        Map<String, FileNode> subFiles=fileNode.getSubFiles();
-        Set<String> keys=subFiles.keySet();
-        List<String> subfileList = new ArrayList<String>();
-        subfileList.addAll(keys);
-        return subfileList;
-    }
-    //needs to add to parent
-    public boolean touch(String filePath)
-    {
-        FileNode newFile= new FileNode(filePath, false);
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        //find parent directory
-        int lastIndex=filePath.lastIndexOf("/");
-        String parentDir=filePath.substring(0,lastIndex);  //if parent is root using this sets parentDir to an empty string
-        if(parentDir.equals("")) //parent directory is root
-        {
-            parentDir="/";
-        }
-        String parentString=cc.read(parentDir);
-        if(parentString==null) //parent directory does not exist
-        {
-            return false;
-        }
-        //add directory to the system
-        boolean fileAdded=cc.insert(filePath, gson.toJson(newFile));
-        if(!fileAdded)  //file already exists in system
-        {
-            return false;
-        }
-        //add directory to parent's list of subfiles
-        FileNode parentNode=gson.fromJson(parentString,FileNode.class);
-        parentNode.addSubFile(newFile);
-        cc.edit(parentDir, gson.toJson(parentNode));
-        return true;
-    }
-    public boolean rm(String filePath)
-    {
-        //remove file
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        boolean fileDeleted=cc.delete(filePath);
+        boolean fileDeleted=true;
         //find parent and remove directory from its subfiles list
-        int lastIndex=filePath.lastIndexOf("/");
-        String parentDir=filePath.substring(0,lastIndex);
+        int lastIndex=dirName.lastIndexOf("/");
+        String parentDir=dirName.substring(0,lastIndex);
         if(parentDir.equals("")) //parent directory is root
         {
             parentDir="/";
         }
+        RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
+        lock1.writeLock(parentDir);
         String parentString=cc.read(parentDir);
         if(parentString!=null) //parent exists
         {
             FileNode parentNode=gson.fromJson(parentString,FileNode.class);
-            parentNode.removeSubFileByName(filePath);
+            parentNode.removeSubFileByName(dirName);
             cc.edit(parentDir, gson.toJson(parentNode));
         }
         else
         {
-            fileDeleted=false;
+            lock1.unlock(parentDir);
+            return false;  //parent did not exist
         }
+        lock1.unlock(parentDir);
+        RemoteLock lock2 = new RemoteLock(lockHost,lockPort);
+        lock2.writeLock(dirName);
+        String fileString=cc.read(dirName);
+        fileDeleted=cc.delete(dirName);  //set to false if file didn't exist, true if exists and was deleted
+        lock2.unlock(dirName);
+        if(fileString!=null)
+        {
+            //get list of subdirectories/subfiles from the deleted directory
+            FileNode fileNode=gson.fromJson(fileString,FileNode.class);
+            Map<String, FileNode> subFiles=fileNode.getSubFiles();
+            if(subFiles!=null) {
+                Set<String> keys = subFiles.keySet();
+                List<String> subfileList = new ArrayList<String>();
+                subfileList.addAll(keys);
+                for (int i = 0; i < subfileList.size(); i++) {
+                    recursiveDelete(subfileList.get(i));
+                }
+            }
+        }
+
         return fileDeleted;
     }
-    //needs to recursively delete subdirectories
-    public boolean rmdir(String dirname)
+
+    //only called when file has already been disconnected from system by deleting parent, so doesn't need to worry about locks
+    private void recursiveDelete(String path)
     {
-
-        return false;
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        String fileString=cc.read(path);
+        FileNode fileNode=gson.fromJson(fileString,FileNode.class);
+        if(fileNode.isDirectory)
+        {
+            Map<String, FileNode> subFiles=fileNode.getSubFiles();
+            if(subFiles!=null) {
+                Set<String> keys = subFiles.keySet();
+                List<String> subfileList = new ArrayList<String>();
+                subfileList.addAll(keys);
+                for (int i = 0; i < subfileList.size(); i++) {
+                    recursiveDelete(subfileList.get(i));
+                }
+            }
+        }
+        cc.delete(path);
     }
-
 }
