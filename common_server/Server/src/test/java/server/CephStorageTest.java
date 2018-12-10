@@ -20,28 +20,28 @@ public class CephStorageTest {
 
 	public CentralizedStorage initTree() {
 		CentralizedStorage storage = new CentralizedStorage();
-		validateOp(storage.mkdir("/ab"));
-		validateOp(storage.mkdir("/cd"));
-		validateOp(storage.mkdir("/cd/ab"));
-		validateOp(storage.mkdir("/ab/cd"));
-		validateOp(storage.mkdir("/ab/cd/ef"));
-		validateOp(storage.mkdir("/ab/cd/ef/zh"));
-		validateOp(storage.mkdir("/ab/cd/ef/zh/dh"));
-		validateOp(storage.mkdir("/ab/cd/gh"));
-		validateOp(storage.mkdir("/ab/ef"));
+		validateOp(storage.mkdir("/ab", false));
+		validateOp(storage.mkdir("/cd", false));
+		validateOp(storage.mkdir("/cd/ab", false));
+		validateOp(storage.mkdir("/ab/cd", false));
+		validateOp(storage.mkdir("/ab/cd/ef", false));
+		validateOp(storage.mkdir("/ab/cd/ef/zh", false));
+		validateOp(storage.mkdir("/ab/cd/ef/zh/dh", false));
+		validateOp(storage.mkdir("/ab/cd/gh", false));
+		validateOp(storage.mkdir("/ab/ef", false));
 		return storage;
 	}
 
 	public CentralizedStorage initTree(String rootDir,String rootDirParent) {
 		CentralizedStorage storage = new CentralizedStorage(rootDir);
 		storage.getRoot().setPath(rootDirParent+rootDir);
-		validateOp(storage.mkdir(rootDir+"/ab"));
-		validateOp(storage.mkdir(rootDir+"/cd"));
-		validateOp(storage.mkdir(rootDir+"/cd/ab"));
-		validateOp(storage.mkdir(rootDir+"/ab/cd"));
-		validateOp(storage.mkdir(rootDir+"/ab/cd/ef"));
-		validateOp(storage.mkdir(rootDir+"/ab/cd/gh"));
-		validateOp(storage.mkdir(rootDir+"/ab/ef"));
+		validateOp(storage.mkdir(rootDir+"/ab", false));
+		validateOp(storage.mkdir(rootDir+"/cd", false));
+		validateOp(storage.mkdir(rootDir+"/cd/ab", false));
+		validateOp(storage.mkdir(rootDir+"/ab/cd", false));
+		validateOp(storage.mkdir(rootDir+"/ab/cd/ef", false));
+		validateOp(storage.mkdir(rootDir+"/ab/cd/gh", false));
+		validateOp(storage.mkdir(rootDir+"/ab/ef", false));
 		
 		
 		return storage;
@@ -66,7 +66,9 @@ public class CephStorageTest {
 	public void testPartition() {
 		CentralizedStorage storage = initTree();
 		CephServer cephServer = Mockito.mock(CephServer.class);
-		Mockito.when(cephServer.sendCreatePartition(Mockito.anyString(), Mockito.anyString())).thenReturn(true);
+		Result<String> trueResult=new Result<>();
+		trueResult.setOperationSuccess(true);
+		Mockito.when(cephServer.sendCreatePartition(Mockito.anyString(), Mockito.anyString())).thenReturn(trueResult);
 
 		CephStorage cephStorage = new CephStorage(false, "someurl", cephServer);
 		cephStorage.init(storage.getRoot());
@@ -116,34 +118,34 @@ public class CephStorageTest {
 		//Test Basic Operation, Mock the Locking
 		// TestLS
 		rootDirName="/somedir/on/parent/server/SomeRoot%";
-		Result<String> result = storage.ls(rootDirName+"ab");
+		Result<String> result = storage.ls(rootDirName+"ab", false);
 		validateOp(result);
 		String resultStr = result.getOperationReturnVal();
 		Assert.assertEquals(resultStr, "Inode [name=cd]\nInode [name=ef]");
 
 		// Test RMDIR
-		result = storage.rmdir(rootDirName+"ab/cd");
+		result = storage.rmdir(rootDirName+"ab/cd", false);
 		validateOp(result);
 
-		result = storage.ls(rootDirName+"ab");
+		result = storage.ls(rootDirName+"ab", false);
 		validateOp(result);
 		resultStr = result.getOperationReturnVal();
 		Assert.assertEquals(resultStr, "Inode [name=ef]");
 
-		result = storage.rmdir(rootDirName+"ab/ef");
+		result = storage.rmdir(rootDirName+"ab/ef", false);
 		validateOp(result);
 
-		result = storage.ls(rootDirName+"ab");
+		result = storage.ls(rootDirName+"ab", false);
 		validateOp(result);
 		resultStr = result.getOperationReturnVal();
 		Assert.assertEquals(resultStr, "");
 
 		// TEST Touch
-		result = storage.touch(rootDirName+"ab/file");
+		result = storage.touch(rootDirName+"ab/file", false);
 		validateOp(result);
 
 		// Mkdir FAIL because cant create a something in a file
-		result = storage.mkdir(rootDirName+"ab/file/ab");
+		result = storage.mkdir(rootDirName+"ab/file/ab", false);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 	}
 }

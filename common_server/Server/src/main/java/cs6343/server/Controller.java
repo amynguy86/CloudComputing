@@ -42,6 +42,17 @@ public class Controller {
 		return gson.toJsonTree(result, stringType).toString();
 	}
 
+	@RequestMapping("/commandWithDelay")
+	public String commandWithDelay(@RequestBody String command) throws NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Result<String> result = (Result<String>) storageSolution.executeCommandWithDelay(command);
+		// Typee stringType = new TypeToken<Result<String>>(){}.getType();
+		Type stringType = new TypeToken<Result<String>>() {
+		}.getType();
+		Gson gson = new Gson();
+		return gson.toJsonTree(result, stringType).toString();
+	}
+
 	/*
 	 * For Ceph LockServer to LockServer communication
 	 */

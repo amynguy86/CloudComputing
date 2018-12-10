@@ -1,9 +1,11 @@
 package cs6343.ceph;
 
 import java.lang.reflect.InvocationTargetException;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import cs6343.RemoteLock;
@@ -27,6 +29,37 @@ public class CephStorage extends Storage {
 	public boolean isRoot;
 	String rootServerAddress;
 	String parentPath;
+	public ReentrantReadWriteLock cephReadWriteLock;
+
+	@Override
+	public Result<?> executeCommand(String command) {
+		cephReadWriteLock.readLock().lock();
+		Result<?> result;
+		if (this.storage != null)
+			result = super.executeCommand(command);
+		else {
+			result = new Result<>();
+			result.setOperationSuccess(false);
+			result.setOperationReturnMessage("There is no partition on this server");
+		}
+		cephReadWriteLock.readLock().unlock();
+		return result;
+	}
+
+	public Result<?> executeCommandWithDelay(String command)
+			throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+		cephReadWriteLock.readLock().lock();
+		Result<?> result;
+		if (this.storage != null)
+			result = super.executeCommandWithDelay(command);
+		else {
+			result = new Result<>();
+			result.setOperationSuccess(false);
+			result.setOperationReturnMessage("There is no partition on this server");
+		}
+		cephReadWriteLock.readLock().unlock();
+		return result;
+	}
 
 	public String getRootServerAddress() {
 		return rootServerAddress;
@@ -49,6 +82,7 @@ public class CephStorage extends Storage {
 		}
 		this.rootServerAddress = rootServerAddress;
 		this.cephServer = cephServer;
+		this.cephReadWriteLock = new ReentrantReadWriteLock();
 	}
 
 	public CephStorage(boolean isRoot, String rootServerAddress, int port) {
@@ -91,7 +125,8 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> partition(String data) {
+	public Result<String> partition(String data,boolean delay) {
+		//TODO delay work
 		logger.info("Executing Command partition, data: {}", data);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -161,16 +196,17 @@ public class CephStorage extends Storage {
 							nodeToMoveInode.setParent(parentInode);
 							String prevName = nodeToMoveInode.getName();
 							nodeToMoveInode.setName(nodeToMoveInode.getName());
-							if (this.cephServer.sendCreatePartition(json, serverNo)) {
+							Result<String> rsltPartitionCmd;
+							if ((rsltPartitionCmd = this.cephServer.sendCreatePartition(json, serverNo))
+									.isOperationSuccess()) {
 								nodeToMoveInode.setParent(parentInode);
-								nodeToMoveInode.setName(prevName); // set it back so names are correct
 								((PhysicalInode) parentInode).getChildren().remove(prevName);
 								VirtualInode vInode = new VirtualInode(nodeToMoveInode, serverNo);
 								((PhysicalInode) parentInode).addChild(vInode);
 								result.setOperationSuccess(true);
 							} else {
 								nodeToMoveInode.setParent(parentInode);
-								result.setOperationSuccess(false);
+								result = rsltPartitionCmd;
 							}
 						} else {
 							result.setOperationReturnMessage("There is already a partiton here, its resides on server"
@@ -195,12 +231,20 @@ public class CephStorage extends Storage {
 
 	public Result<String> cephServerRqst(CephServer.ServerRequest serverRqst) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		return (Result<String>) CephServer.class.getMethod(serverRqst.getCommand(), String.class).invoke(cephServer,
-				serverRqst.getData());
-	}
+		Result<String> result;
+		this.cephReadWriteLock.writeLock().lock();
+		try {
+			result = (Result<String>) CephServer.class.getMethod(serverRqst.getCommand(), String.class)
+					.invoke(cephServer, serverRqst.getData());
 
-	public Result<String> sendRedirectRequest(String serverIp) {
-		return null;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			result = new Result<>();
+			result.setOperationSuccess(false);
+			result.setOperationReturnMessage(ex.getMessage());
+		}
+		this.cephReadWriteLock.writeLock().unlock();
+		return result;
 	}
 
 	/*
@@ -230,11 +274,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> ls(String path) {
+	public Result<String> ls(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.ls(path);
+			return this.storage.ls(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -242,7 +286,7 @@ public class CephStorage extends Storage {
 			} else {
 				// todo lock remotely first
 				RemoteLock lock = readLockParent();
-				result = this.storage.ls(isPathValid.getOperationReturnVal()[1]);
+				result = this.storage.ls(isPathValid.getOperationReturnVal()[1], delay);
 				lock.unlock();
 			}
 		}
@@ -250,11 +294,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> mkdir(String path) {
+	public Result<String> mkdir(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.mkdir(path);
+			return this.storage.mkdir(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -264,7 +308,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.mkdir(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.mkdir(isPathValid.getOperationReturnVal()[1], delay);
 					lock.unlock();
 				}
 			}
@@ -273,11 +317,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> rmdir(String path) {
+	public Result<String> rmdir(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.rmdir(path);
+			return this.storage.rmdir(path, this.cephServer, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -287,7 +331,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1], this.cephServer, delay);
 					lock.unlock();
 				}
 			}
@@ -296,19 +340,19 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> chmod(String path) {
+	public Result<String> chmod(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Result<String> rm(String path) {
+	public Result<String> rm(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Result<String> mv(String path) {
+	public Result<String> mv(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -321,11 +365,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> touch(String path) {
+	public Result<String> touch(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.touch(path);
+			return this.storage.touch(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -335,7 +379,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.touch(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.touch(isPathValid.getOperationReturnVal()[1], delay);
 					lock.unlock();
 				}
 			}

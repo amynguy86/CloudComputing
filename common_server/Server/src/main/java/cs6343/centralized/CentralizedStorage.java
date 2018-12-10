@@ -1,12 +1,13 @@
 package cs6343.centralized;
 
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import cs6343.ceph.CephServer;
 import cs6343.data.FileType;
 import cs6343.data.PhysicalInode;
 import cs6343.data.MetaData;
@@ -35,7 +36,7 @@ public class CentralizedStorage extends Storage {
 		metaData.setType(FileType.DIRECTORY);
 		root.setMetaData(metaData);
 	}
-	
+
 	public CentralizedStorage(PhysicalInode rootdir) {
 		root = rootdir;
 	}
@@ -65,8 +66,8 @@ public class CentralizedStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> ls(String path) {
-		return ls(path, true);
+	public Result<String> ls(String path, boolean delay) {
+		return ls(path, true, delay);
 	}
 
 	public PhysicalInode getRoot() {
@@ -77,7 +78,7 @@ public class CentralizedStorage extends Storage {
 		this.root = root;
 	}
 
-	public Result<String> ls(String path, boolean unlockAtEnd) {
+	public Result<String> ls(String path, boolean unlockAtEnd, boolean delay) {
 		logger.info("Executing Command ls, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -99,13 +100,21 @@ public class CentralizedStorage extends Storage {
 		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd)
+		if (unlockAtEnd){
+			if(delay){
+				try {
+					Thread.sleep(15000);
+				} catch (InterruptedException e){
+					e.printStackTrace();;
+				}
+			}
 			this.unLockRead(listInodes);
+		}
 		return result;
 	}
 
 	@Override
-	public Result<String> rm(String path) {
+	public Result<String> rm(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -153,7 +162,8 @@ public class CentralizedStorage extends Storage {
 
 					inode = ((PhysicalInode) inode).getChild(path.get(i));
 
-					if (inode == null || (this.isPhysicalNode(inode) && ((PhysicalInode)inode).getMetaData().getType() == FileType.FILE)) {
+					if (inode == null || (this.isPhysicalNode(inode)
+							&& ((PhysicalInode) inode).getMetaData().getType() == FileType.FILE)) {
 						result.setOperationReturnMessage("Unable to find DIR:" + path.get(i));
 						return result;
 					}
@@ -169,11 +179,12 @@ public class CentralizedStorage extends Storage {
 		result.setOperationSuccess(true);
 		return result;
 	}
-	
+
 	public static String createRedirectMsg(Inode inode) {
-		String msg="REDIRECT TO SERVER:" + inode.getServerId() + "\n FOR PATH: " + inode.getPath();
+		String msg = "REDIRECT TO SERVER:" + inode.getServerId() + "\n FOR PATH: " + inode.getPath();
 		return msg;
 	}
+
 	/*
 	 * Return list of unlockedNodes, these nodes MUST have been locked!
 	 */
@@ -191,19 +202,18 @@ public class CentralizedStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> mkdir(String path) {
+	public Result<String> mkdir(String path, boolean delay) {
 		logger.info("Executing Command MKDIR, data: {}", path);
-		return createNode(path, FileType.DIRECTORY, true);
+		return createNode(path, FileType.DIRECTORY, true, delay);
 	}
 
 	@Override
-	public Result<String> touch(String path) {
+	public Result<String> touch(String path, boolean delay) {
 		logger.info("Executing Command touch, data: {}", path);
-		return createNode(path, FileType.FILE, true);
+		return createNode(path, FileType.FILE, true, delay);
 	}
 
-
-	public Result<String> createNode(String path, FileType fileType, boolean unlockAtEnd) {
+	public Result<String> createNode(String path, FileType fileType, boolean unlockAtEnd, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 
@@ -228,7 +238,8 @@ public class CentralizedStorage extends Storage {
 			else
 				parentInode = this.root;
 
-			if (parentInode == null || (isPhysicalNode(parentInode) && ((PhysicalInode)parentInode).getMetaData().getType() == FileType.FILE))
+			if (parentInode == null || (isPhysicalNode(parentInode)
+					&& ((PhysicalInode) parentInode).getMetaData().getType() == FileType.FILE))
 				result.setOperationReturnMessage("DIR NOT FOUND:" + parentDir);
 			else {
 				try {
@@ -241,11 +252,10 @@ public class CentralizedStorage extends Storage {
 						metaData.setType(fileType);
 						newInode.setMetaData(metaData);
 						((PhysicalInode) parentInode).addChild(newInode);
-						newInode.setPath(normalizePath(parentInode.getPath())+"/"+dirToCreate);
+						newInode.setPath(normalizePath(parentInode.getPath()) + "/" + dirToCreate);
 						result.setOperationSuccess(true);
 						result.setOperationReturnVal("Directory Created Successfull");
-					}
-					else {
+					} else {
 						result.setOperationReturnMessage("Directory already exists");
 					}
 					if (unlockAtEnd)
@@ -259,14 +269,27 @@ public class CentralizedStorage extends Storage {
 		{
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd)
+		if (unlockAtEnd) {
+			if (delay) {
+				try {
+					Thread.sleep(15000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					;
+				}
+			}
 			this.unLockRead(listInodes);
+		}
 		return result;
 	}
 
 	@Override
-	public Result<String> rmdir(String path) {
-		return rmdir(path, true);
+	public Result<String> rmdir(String path, boolean delay) {
+		return rmdir(path, true, null,delay);
+	}
+
+	public Result<String> rmdir(String path, CephServer cephServer, boolean delay) {
+		return rmdir(path, true, cephServer,delay);
 	}
 
 	public static String normalizePath(String path) {
@@ -277,7 +300,7 @@ public class CentralizedStorage extends Storage {
 		return returnPath;
 	}
 
-	public Result<String> rmdir(String path, boolean unlockAtEnd) {
+	public Result<String> rmdir(String path, boolean unlockAtEnd, CephServer cephServer, boolean delay) {
 		logger.info("Executing Command RMDIR, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -315,17 +338,20 @@ public class CentralizedStorage extends Storage {
 					dirToDeleteInode = ((PhysicalInode) parentInode).getChild(dirToDelete);
 					if (dirToDeleteInode != null) {
 						if (!isPhysicalNode(dirToDeleteInode)) {
-							//Todo send to other server
-							result.setOperationReturnMessage("NOT IMPLEMENTED YET");
-							
+							result = cephServer.sendRemovePartition(dirToDeleteInode.getPath(),
+									dirToDeleteInode.getServerId());
 						} else {
-							((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());
-							result.setOperationSuccess(true);
-							result.setOperationReturnVal("Directory Deleted Successfull");
+							if (cephServer != null) {
+								result = cephServer.findAndDeleteVirtualNodes((PhysicalInode)dirToDeleteInode);
+							} else {
+								result.setOperationSuccess(true);
+								result.setOperationReturnVal("Directory Deleted Successfull");
+							}
 						}
+						((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());
+
 					} else {
-						result.setOperationReturnMessage("Directory " + dirToDelete + " does not exist");
-					}
+						result.setOperationReturnMessage("Directory " + dirToDelete + " does not exist"); }
 					if (unlockAtEnd)
 						parentInode.writeLock(LockOperation.UNLOCK);
 				} catch (RedirectException ex) {
@@ -336,22 +362,33 @@ public class CentralizedStorage extends Storage {
 						parentInode.writeLock(LockOperation.UNLOCK);
 				}
 			}
-		} else {
+		} else
+
+		{
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd)
+		if (unlockAtEnd) {
+			if (delay) {
+				try {
+					Thread.sleep(15000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					;
+				}
+			}
 			this.unLockRead(listInodes);
+		}
 		return result;
 	}
 
 	@Override
-	public Result<String> mv(String path) {
+	public Result<String> mv(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Result<String> chmod(String path) {
+	public Result<String> chmod(String path, boolean delay) {
 		return null;
 	}
 

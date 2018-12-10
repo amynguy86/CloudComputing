@@ -35,11 +35,11 @@ public class App {
 	}
 
 	public void createRandomStructure(Storage storage) {
-		storage.mkdir("/a");
-		storage.mkdir("/a/b");
-		storage.mkdir("/a/b/c");
-		storage.mkdir("/a/b/c/d");
-		storage.mkdir("/a/b/c/d/e");
+		storage.mkdir("/a", false);
+		storage.mkdir("/a/b", false);
+		storage.mkdir("/a/b/c", false);
+		storage.mkdir("/a/b/c/d", false);
+		storage.mkdir("/a/b/c/d/e", false);
 		
 	}
 
