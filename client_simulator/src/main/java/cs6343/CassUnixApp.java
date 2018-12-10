@@ -18,7 +18,6 @@ String input;
          if(input.split(" ").length>=2) {
              arg = input.split(" ")[1];
          }
-         System.out.println("Received command "+cmd+" "+arg);
          if(cmd.equals("configure"))
          {
              cmds.configureDB();
@@ -50,10 +49,12 @@ String input;
     scanner.close();
 }
 else {
+
+
+
     cmds.configureDB();
-    System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+
+    /*
     cmds.mkdir("/a");
   //  cmds.mkdir("/b");
     cmds.mkdir("/a/aa");
@@ -65,7 +66,7 @@ else {
     cmds.rmdir("/a");
     System.out.println(cmds.ls("/a/aa/aaa"));
     System.out.println(cmds.ls("/"));
-
+*/
 
 }
 cmds.disconnect();
