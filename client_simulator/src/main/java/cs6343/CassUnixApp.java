@@ -14,7 +14,10 @@ String input;
     while (!(input = scanner.nextLine()).equals("exit"))
      {
          String cmd=input.split(" ")[0];
-         String arg=input.split(" ")[1];
+         String arg="";
+         if(input.split(" ").length>=2) {
+             arg = input.split(" ")[1];
+         }
          System.out.println("Received command "+cmd+" "+arg);
          if(cmd.equals("configure"))
          {
