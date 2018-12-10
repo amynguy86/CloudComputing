@@ -230,11 +230,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> ls(String path) {
+	public Result<String> ls(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.ls(path);
+			return this.storage.ls(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -242,7 +242,7 @@ public class CephStorage extends Storage {
 			} else {
 				// todo lock remotely first
 				RemoteLock lock = readLockParent();
-				result = this.storage.ls(isPathValid.getOperationReturnVal()[1]);
+				result = this.storage.ls(isPathValid.getOperationReturnVal()[1], delay);
 				lock.unlock();
 			}
 		}
@@ -250,11 +250,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> mkdir(String path) {
+	public Result<String> mkdir(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.mkdir(path);
+			return this.storage.mkdir(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -264,7 +264,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.mkdir(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.mkdir(isPathValid.getOperationReturnVal()[1], delay);
 					lock.unlock();
 				}
 			}
@@ -273,11 +273,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> rmdir(String path) {
+	public Result<String> rmdir(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.rmdir(path);
+			return this.storage.rmdir(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -287,7 +287,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1], delay);
 					lock.unlock();
 				}
 			}
@@ -296,19 +296,19 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> chmod(String path) {
+	public Result<String> chmod(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Result<String> rm(String path) {
+	public Result<String> rm(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Result<String> mv(String path) {
+	public Result<String> mv(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -321,11 +321,11 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> touch(String path) {
+	public Result<String> touch(String path, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.touch(path);
+			return this.storage.touch(path, delay);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -335,7 +335,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.touch(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.touch(isPathValid.getOperationReturnVal()[1], delay);
 					lock.unlock();
 				}
 			}

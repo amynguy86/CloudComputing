@@ -20,34 +20,34 @@ public class CentralizedStorageTest {
 		// build the tree!
 		CentralizedStorage storage = initTree();
 		// TestLS
-		Result<String> result = storage.ls("/ab");
+		Result<String> result = storage.ls("/ab", false);
 		validateOp(result);
 		String resultStr = result.getOperationReturnVal();
 		Assert.assertEquals(resultStr, "Inode [name=cd]\nInode [name=ef]");
 
 		// Test RMDIR
-		result = storage.rmdir("/ab/cd");
+		result = storage.rmdir("/ab/cd", false);
 		validateOp(result);
 
-		result = storage.ls("/ab");
+		result = storage.ls("/ab", false);
 		validateOp(result);
 		resultStr = result.getOperationReturnVal();
 		Assert.assertEquals(resultStr, "Inode [name=ef]");
 
-		result = storage.rmdir("/ab/ef");
+		result = storage.rmdir("/ab/ef", false);
 		validateOp(result);
 
-		result = storage.ls("/ab");
+		result = storage.ls("/ab", false);
 		validateOp(result);
 		resultStr = result.getOperationReturnVal();
 		Assert.assertEquals(resultStr, "");
 		
 		//TEST Touch
-		result = storage.touch("/ab/file");
+		result = storage.touch("/ab/file", false);
 		validateOp(result);
 
 		//Mkdir FAIL because cant create a something in a file
-		result = storage.mkdir("/ab/file/ab");
+		result = storage.mkdir("/ab/file/ab", false);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 	}
 
@@ -57,13 +57,13 @@ public class CentralizedStorageTest {
 
 	public CentralizedStorage initTree() {
 		CentralizedStorage storage = new CentralizedStorage();
-		validateOp(storage.mkdir("/ab"));
-		validateOp(storage.mkdir("/cd"));
-		validateOp(storage.mkdir("/cd/ab"));
-		validateOp(storage.mkdir("/ab/cd"));
-		validateOp(storage.mkdir("/ab/cd/ef"));
-		validateOp(storage.mkdir("/ab/cd/gh"));
-		validateOp(storage.mkdir("/ab/ef"));
+		validateOp(storage.mkdir("/ab", false));
+		validateOp(storage.mkdir("/cd", false));
+		validateOp(storage.mkdir("/cd/ab", false));
+		validateOp(storage.mkdir("/ab/cd", false));
+		validateOp(storage.mkdir("/ab/cd/ef", false));
+		validateOp(storage.mkdir("/ab/cd/gh", false));
+		validateOp(storage.mkdir("/ab/ef", false));
 		return storage;
 	}
 
@@ -108,7 +108,7 @@ public class CentralizedStorageTest {
 		storage = initTree();
 		path = "/ab/cd/ef/i";
 
-		storage.createNode(path, FileType.DIRECTORY, false);
+		storage.createNode(path, FileType.DIRECTORY, false, false);
 
 		path = "ab/cd";
 		p = path.split("/");
@@ -129,7 +129,7 @@ public class CentralizedStorageTest {
 		storage = initTree();
 		path = "/ab/cd/ef/i";
 
-		storage.createNode(path, FileType.FILE, false);
+		storage.createNode(path, FileType.FILE, false, false);
 
 		path = "ab/cd";
 		p = path.split("/");
@@ -153,7 +153,7 @@ public class CentralizedStorageTest {
 		// LS Unlocking
 		CentralizedStorage storage = initTree();
 		String path = "/ab/cd/ef";
-		storage.ls(path);
+		storage.ls(path, false);
 
 		path = "ab/cd/ef";
 		String[] p = path.split("/");
@@ -168,7 +168,7 @@ public class CentralizedStorageTest {
 		storage = initTree();
 		path = "/ab/cd/ef";
 
-		storage.rmdir(path);
+		storage.rmdir(path, false);
 
 		path = "ab/cd";
 		p = path.split("/");
@@ -185,7 +185,7 @@ public class CentralizedStorageTest {
 		storage = initTree();
 		path = "/ab/cd/ef/i";
 
-		storage.rmdir(path);
+		storage.rmdir(path, false);
 
 		path = "ab/cd/ef/i";
 		p = path.split("/");
@@ -222,7 +222,7 @@ public class CentralizedStorageTest {
 		//Test Get redirect request always
 		
 		//ls
-		Result<String> result=storage1.ls("/ab/cd/ef");
+		Result<String> result=storage1.ls("/ab/cd/ef", false);
 		System.out.println(result);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 		String[] serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
@@ -231,7 +231,7 @@ public class CentralizedStorageTest {
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
 		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
-		result=storage1.ls("/ab/cd/ef/fg/ge");
+		result=storage1.ls("/ab/cd/ef/fg/ge", false);
 		
 		Assert.assertEquals(result.isOperationSuccess(), false);
 		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
@@ -241,7 +241,7 @@ public class CentralizedStorageTest {
 		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
 		//mkdir
-		result=storage1.mkdir("/ab/cd/ef/fg/");
+		result=storage1.mkdir("/ab/cd/ef/fg/", false);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 		System.out.println(result);
 		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
@@ -251,10 +251,10 @@ public class CentralizedStorageTest {
 		Assert.assertEquals(serverToGo[1], "locah:host:4040");
 		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
-		result=storage1.mkdir("/ab/cd/hh");
+		result=storage1.mkdir("/ab/cd/hh", false);
 		Assert.assertEquals(result.isOperationSuccess(), true);
 		
-		result=storage1.mkdir("/ab/cd/ef/fg/hh");
+		result=storage1.mkdir("/ab/cd/ef/fg/hh", false);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
 		path=result.getOperationReturnMessage().split("\n")[1].split(":",2);
@@ -262,13 +262,13 @@ public class CentralizedStorageTest {
 		Assert.assertEquals(path[1], " /ab/cd/ef");
 		
 		
-		result=storage1.mkdir("/ab/cd/ef/");
+		result=storage1.mkdir("/ab/cd/ef/", false);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 		Assert.assertEquals(result.getOperationReturnMessage(), "Directory already exists");
 		
 		
 		//rmdir
-		result=storage1.rmdir("/ab/cd/ef");
+		result=storage1.rmdir("/ab/cd/ef", false);
 		Assert.assertEquals(result.isOperationSuccess(), false);
 		serverToGo =result.getOperationReturnMessage().split("\n")[0].split(":",2);
 		path=result.getOperationReturnMessage().split("\n")[1].split(":",2);

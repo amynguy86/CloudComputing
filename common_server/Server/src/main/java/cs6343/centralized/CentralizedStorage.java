@@ -65,8 +65,8 @@ public class CentralizedStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> ls(String path) {
-		return ls(path, true);
+	public Result<String> ls(String path, boolean delay) {
+		return ls(path, true, delay);
 	}
 
 	public PhysicalInode getRoot() {
@@ -77,7 +77,7 @@ public class CentralizedStorage extends Storage {
 		this.root = root;
 	}
 
-	public Result<String> ls(String path, boolean unlockAtEnd) {
+	public Result<String> ls(String path, boolean unlockAtEnd, boolean delay) {
 		logger.info("Executing Command ls, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -99,13 +99,21 @@ public class CentralizedStorage extends Storage {
 		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd)
+		if (unlockAtEnd){
+			if(delay){
+				try {
+					Thread.sleep(15000);
+				} catch (InterruptedException e){
+					e.printStackTrace();;
+				}
+			}
 			this.unLockRead(listInodes);
+		}
 		return result;
 	}
 
 	@Override
-	public Result<String> rm(String path) {
+	public Result<String> rm(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -191,19 +199,19 @@ public class CentralizedStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> mkdir(String path) {
+	public Result<String> mkdir(String path, boolean delay) {
 		logger.info("Executing Command MKDIR, data: {}", path);
-		return createNode(path, FileType.DIRECTORY, true);
+		return createNode(path, FileType.DIRECTORY, true, delay);
 	}
 
 	@Override
-	public Result<String> touch(String path) {
+	public Result<String> touch(String path, boolean delay) {
 		logger.info("Executing Command touch, data: {}", path);
-		return createNode(path, FileType.FILE, true);
+		return createNode(path, FileType.FILE, true, delay);
 	}
 
 
-	public Result<String> createNode(String path, FileType fileType, boolean unlockAtEnd) {
+	public Result<String> createNode(String path, FileType fileType, boolean unlockAtEnd, boolean delay) {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 
@@ -259,14 +267,23 @@ public class CentralizedStorage extends Storage {
 		{
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd)
+		if (unlockAtEnd) {
+			if (delay) {
+				try {
+					Thread.sleep(15000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					;
+				}
+			}
 			this.unLockRead(listInodes);
+		}
 		return result;
 	}
 
 	@Override
-	public Result<String> rmdir(String path) {
-		return rmdir(path, true);
+	public Result<String> rmdir(String path, boolean delay) {
+		return rmdir(path, true, delay);
 	}
 
 	public static String normalizePath(String path) {
@@ -277,7 +294,7 @@ public class CentralizedStorage extends Storage {
 		return returnPath;
 	}
 
-	public Result<String> rmdir(String path, boolean unlockAtEnd) {
+	public Result<String> rmdir(String path, boolean unlockAtEnd, boolean delay) {
 		logger.info("Executing Command RMDIR, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -324,8 +341,7 @@ public class CentralizedStorage extends Storage {
 							result.setOperationReturnVal("Directory Deleted Successfull");
 						}
 					} else {
-						result.setOperationReturnMessage("Directory " + dirToDelete + " does not exist");
-					}
+						result.setOperationReturnMessage("Directory " + dirToDelete + " does not exist"); }
 					if (unlockAtEnd)
 						parentInode.writeLock(LockOperation.UNLOCK);
 				} catch (RedirectException ex) {
@@ -339,19 +355,28 @@ public class CentralizedStorage extends Storage {
 		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd)
+		if (unlockAtEnd) {
+			if (delay) {
+				try {
+					Thread.sleep(15000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					;
+				}
+			}
 			this.unLockRead(listInodes);
+		}
 		return result;
 	}
 
 	@Override
-	public Result<String> mv(String path) {
+	public Result<String> mv(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Result<String> chmod(String path) {
+	public Result<String> chmod(String path, boolean delay) {
 		return null;
 	}
 
