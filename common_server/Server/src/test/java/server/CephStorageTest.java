@@ -66,7 +66,9 @@ public class CephStorageTest {
 	public void testPartition() {
 		CentralizedStorage storage = initTree();
 		CephServer cephServer = Mockito.mock(CephServer.class);
-		Mockito.when(cephServer.sendCreatePartition(Mockito.anyString(), Mockito.anyString())).thenReturn(true);
+		Result<String> trueResult=new Result<>();
+		trueResult.setOperationSuccess(true);
+		Mockito.when(cephServer.sendCreatePartition(Mockito.anyString(), Mockito.anyString())).thenReturn(trueResult);
 
 		CephStorage cephStorage = new CephStorage(false, "someurl", cephServer);
 		cephStorage.init(storage.getRoot());

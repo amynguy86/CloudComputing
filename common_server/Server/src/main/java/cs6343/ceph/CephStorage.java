@@ -1,9 +1,11 @@
 package cs6343.ceph;
 
 import java.lang.reflect.InvocationTargetException;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import cs6343.RemoteLock;
@@ -27,6 +29,22 @@ public class CephStorage extends Storage {
 	public boolean isRoot;
 	String rootServerAddress;
 	String parentPath;
+	public ReentrantReadWriteLock cephReadWriteLock;
+
+	@Override
+	public Result<?> executeCommand(String command) {
+		cephReadWriteLock.readLock().lock();
+		Result<?> result;
+		if (this.storage != null)
+			result = super.executeCommand(command);
+		else {
+			result = new Result<>();
+			result.setOperationSuccess(false);
+			result.setOperationReturnMessage("There is no partition on this server");
+		}
+		cephReadWriteLock.readLock().unlock();
+		return result;
+	}
 
 	public String getRootServerAddress() {
 		return rootServerAddress;
@@ -49,6 +67,7 @@ public class CephStorage extends Storage {
 		}
 		this.rootServerAddress = rootServerAddress;
 		this.cephServer = cephServer;
+		this.cephReadWriteLock= new ReentrantReadWriteLock();
 	}
 
 	public CephStorage(boolean isRoot, String rootServerAddress, int port) {
@@ -161,16 +180,16 @@ public class CephStorage extends Storage {
 							nodeToMoveInode.setParent(parentInode);
 							String prevName = nodeToMoveInode.getName();
 							nodeToMoveInode.setName(nodeToMoveInode.getName());
-							if (this.cephServer.sendCreatePartition(json, serverNo)) {
+							Result<String> rsltPartitionCmd;
+							if ((rsltPartitionCmd = this.cephServer.sendCreatePartition(json, serverNo)).isOperationSuccess()) {
 								nodeToMoveInode.setParent(parentInode);
-								nodeToMoveInode.setName(prevName); // set it back so names are correct
 								((PhysicalInode) parentInode).getChildren().remove(prevName);
 								VirtualInode vInode = new VirtualInode(nodeToMoveInode, serverNo);
 								((PhysicalInode) parentInode).addChild(vInode);
 								result.setOperationSuccess(true);
 							} else {
 								nodeToMoveInode.setParent(parentInode);
-								result.setOperationSuccess(false);
+								result = rsltPartitionCmd;
 							}
 						} else {
 							result.setOperationReturnMessage("There is already a partiton here, its resides on server"
@@ -195,12 +214,20 @@ public class CephStorage extends Storage {
 
 	public Result<String> cephServerRqst(CephServer.ServerRequest serverRqst) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		return (Result<String>) CephServer.class.getMethod(serverRqst.getCommand(), String.class).invoke(cephServer,
-				serverRqst.getData());
-	}
+		Result<String> result;
+		this.cephReadWriteLock.writeLock().lock();
+		try {
+			result = (Result<String>) CephServer.class.getMethod(serverRqst.getCommand(), String.class)
+					.invoke(cephServer, serverRqst.getData());
 
-	public Result<String> sendRedirectRequest(String serverIp) {
-		return null;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			result = new Result<>();
+			result.setOperationSuccess(false);
+			result.setOperationReturnMessage(ex.getMessage());
+		}
+		this.cephReadWriteLock.writeLock().unlock();
+		return result;
 	}
 
 	/*
@@ -277,7 +304,7 @@ public class CephStorage extends Storage {
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		if (this.isRoot) {
-			return this.storage.rmdir(path);
+			return this.storage.rmdir(path,this.cephServer);
 		} else {
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
@@ -287,7 +314,7 @@ public class CephStorage extends Storage {
 					result.setOperationReturnMessage("Invalid Path");
 				} else {
 					RemoteLock lock = readLockParent();
-					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1]);
+					result = this.storage.rmdir(isPathValid.getOperationReturnVal()[1],this.cephServer);
 					lock.unlock();
 				}
 			}

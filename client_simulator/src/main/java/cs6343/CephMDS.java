@@ -96,31 +96,42 @@ public class CephMDS implements IMetaData {
 
 			Node node = root;
 			Node resultNode = root;
-			int i;
-			for (i = 1; i < vals.length; i++) {
+			int j=0;
+			for (int i = 1; i < vals.length; i++) {
 				node = node.map.get(vals[i]);
 				if (node == null)
 					break;
-
+				
 				if (node.val != null) {
 					resultNode = node;
+					j=i;
 				}
 			}
 
 			String newPath = null;
 			if (!resultNode.key.equals("/")) {
-				String[] newPathArrAfter = Arrays.copyOfRange(vals, i, vals.length);
-				String[] newPathArrBefore = Arrays.copyOfRange(vals, 1, i);
+				String[] newPathArrAfter = Arrays.copyOfRange(vals, j+1, vals.length);
+				String[] newPathArrBefore = Arrays.copyOfRange(vals, 1, j+1);
 				newPath = "/" + String.join("/", newPathArrBefore) + "%" + String.join("/", newPathArrAfter);
 			} else {
 				String[] newPathArr = Arrays.copyOfRange(vals, 1, vals.length);
 				newPath = resultNode.key + String.join("/", newPathArr);
 			}
 
-			return new Node(resultNode.key, resultNode.val, newPath);
+			Node returnVal= new Node(resultNode.key, resultNode.val, newPath);
+			return returnVal;
 		}
 
-		public void remove(String path) {
+		public void remove(String pathParam) {
+			if(pathParam==null)
+				return;
+			
+			int idx = pathParam.indexOf('%');
+			String path=pathParam;
+			
+			if(idx!=-1)
+				path=path.substring(0,idx);
+			
 			String[] vals = path.split("/");
 			vals[0] = "/";
 			Node node = root;
@@ -188,8 +199,7 @@ public class CephMDS implements IMetaData {
 		if (msg == null || msg.length() == 0)
 			return false;
 
-		return msg.endsWith("does not reside on this server");
-
+		return msg.endsWith("does not reside on this server") || msg.startsWith("There is no partition on this server");
 	}
 
 	@Override
@@ -209,7 +219,8 @@ public class CephMDS implements IMetaData {
 			} else if (isWrongServerErr(result.getOperationReturnMessage())) {
 				// CacheMiss
 				logger.info("CacheMiss: Server: {} Path: {}", node.val, node.path);
-				node.key = dirName;
+				this.cache.remove(node.path);
+				node.path = dirName;
 				node.val = this.rootServer;
 			} else {
 				logger.error(result.getOperationReturnMessage());
@@ -225,8 +236,9 @@ public class CephMDS implements IMetaData {
 			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "ls " + node.path,
 					Result.class);
 
-			if (result.isOperationSuccess()) {				
-				return result.getOperationReturnVal().length() != 0 ? Arrays.stream(result.getOperationReturnVal().split("\n"))
+			if (result.isOperationSuccess()) {
+				return result.getOperationReturnVal().length() != 0
+						? Arrays.stream(result.getOperationReturnVal().split("\n"))
 								.map(x -> x.substring(x.indexOf('=') + 1, x.indexOf(']'))).collect(Collectors.toList())
 						: Collections.EMPTY_LIST;
 			}
@@ -237,7 +249,8 @@ public class CephMDS implements IMetaData {
 			} else if (isWrongServerErr(result.getOperationReturnMessage())) {
 				// CacheMiss
 				logger.info("CacheMiss: Server: {} Path: {}", node.val, node.path);
-				node.key = dirName;
+				this.cache.remove(node.path);
+				node.path = dirName;
 				node.val = this.rootServer;
 			} else {
 				logger.error(result.getOperationReturnMessage());
@@ -265,13 +278,18 @@ public class CephMDS implements IMetaData {
 		while (true) {
 
 			if (node.getPath().endsWith("%")) {
-				char dirToDelete = node.getPath().charAt(node.getPath().length() - 2);
-				Node previousServer = this.cache.get(node.getPath().substring(0, node.getPath().length() - 2));
+				int indx = node.getPath().lastIndexOf('/');
+				String tmp2=node.getPath().substring(0, indx);
+				String dirToDelete = node.getPath().substring(indx + 1, node.getPath().length() - 1);
+				Node previousServer = this.cache.get(node.getPath().substring(0, indx));
+				String tmpPath;
 				if (previousServer.getPath().endsWith("/") || previousServer.getPath().endsWith("%")) {
-					node.setPath(previousServer.getPath() + dirToDelete);
+					tmpPath = previousServer.getPath()+dirToDelete;
 				} else {
-					node.setPath(previousServer.getPath() + "/" + dirToDelete);
+					tmpPath = previousServer.getPath() + "/"+dirToDelete;
 				}
+
+				node.setPath(tmpPath);
 				node.setVal(previousServer.getVal());
 			}
 
@@ -287,7 +305,8 @@ public class CephMDS implements IMetaData {
 			} else if (isWrongServerErr(result.getOperationReturnMessage())) {
 				// CacheMiss
 				logger.info("CacheMiss: Server: {} Path: {}", node.val, node.path);
-				node.key = dirName;
+				this.cache.remove(node.path);
+				node.path = dirName;
 				node.val = this.rootServer;
 			} else {
 				logger.error(result.getOperationReturnMessage());
@@ -295,5 +314,4 @@ public class CephMDS implements IMetaData {
 			}
 		}
 	}
-
 }
