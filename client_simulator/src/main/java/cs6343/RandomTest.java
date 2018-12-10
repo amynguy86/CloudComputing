@@ -62,7 +62,7 @@ public class RandomTest {
                     currentPath = subfile.isDirectory ? newPath + "/" : newPath;
                     current = subfile;
                 } else {
-                    if(current.isDirectory){
+                    if(subfile.isDirectory){
                         mds.rmdir(newPath);
                     } else  {
                         mds.rm(newPath);
