@@ -1,0 +1,30 @@
+@startuml
+class RandomTest
+interface IMetadataServer{
++ rm()
++ ls()
++ mkdir()
++ rmdir()
++ touch()
+}
+
+class TimedMDS
+class CephMDS
+class CentralizedMDS
+class CassandraMDS
+IMetadataServer <|-- TimedMDS
+IMetadataServer <|-- CephMDS
+IMetadataServer <|-- CentralizedMDS
+IMetadataServer <|-- CassandraMDS
+
+TimedMDS "1" *-- IMetadataServer
+
+
+class FileNode
+class TreeParser
+TreeParser *-- FileNode
+
+
+RandomTest *-- IMetadataServer
+RandomTest *-- FileNode
+@enduml

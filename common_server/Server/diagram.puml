@@ -1,0 +1,18 @@
+@startuml
+
+class CentralizedStorage
+class CephStorage
+CephStorage *-- CentralizedStorage
+
+class Server
+Server <|-- CephServer
+Server <|-- CentralizedServer
+
+CephServer *-- CephStorage
+CentralizedServer *-- CentralizedStorage
+
+
+class LockRequestHandler
+
+CentralizedStorage "1" *-- FileType: rootNode
+@enduml
