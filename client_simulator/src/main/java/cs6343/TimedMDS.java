@@ -35,7 +35,8 @@ public class TimedMDS implements IMetaData{
         long nanoTimeEnd = System.nanoTime();
         double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
         logger.info(mkdirMsg + time);
-        collector.addStat(Operation.MKDIR, time);
+        if(result)
+            collector.addStat(Operation.MKDIR, time);
         return result;
     }
 

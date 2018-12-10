@@ -31,9 +31,12 @@ public class App {
 	@Value("${cloud.command.line}")
 	boolean isCommandline;
 
+	private static String filename;
+
 	private static Logger LOG = LoggerFactory.getLogger(App.class);
 
 	public static void main(String[] args) throws Exception {
+		filename = args[0];
 		SpringApplication.run(App.class, args);
 	}
 
@@ -54,21 +57,18 @@ public class App {
 	@PostConstruct
 	public void begin() throws Exception {
 		if (!isCommandline) {
-			// TreeParser p = new TreeParser();
-			// FileNode out = p.readFile(args[0]);
-			// RandomTest test = new RandomTest(out, new LoggingMDS());
-			// test.walk(10, 100);
-			// test.destructiveWalk(5, 5, .25);
-			// CentralizedMDS mds = new CentralizedMDS("localhost:8080");
-			client.mkdir("/test");
-			client.mkdir("/test/file");
+			TreeParser p = new TreeParser();
+			FileNode out = p.readFile(filename);
+			RandomTest test = new RandomTest(out,client);
+			test.walk(20, 1000);
+      		test.destructiveWalk(10, 20, .25);
 			System.out.println(client.ls("/"));
 			System.out.println(client.ls("/test"));
-			System.out.println(collector.getSummaryStatistics(Operation.LS));
-			System.out.println(collector.getSummaryStatistics(Operation.MKDIR));
-			System.out.println(collector.getSummaryStatistics(Operation.TOUCH));
-			System.out.println(collector.getSummaryStatistics(Operation.RM));
-			System.out.println(collector.getSummaryStatistics(Operation.RMDIR));
+			System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));
+			System.out.println("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
+			System.out.println("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
+			System.out.println("RM: " + collector.getSummaryStatistics(Operation.RM));
+			System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
 			System.exit(0);
 		}
 		else {
