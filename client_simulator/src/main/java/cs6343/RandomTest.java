@@ -37,7 +37,6 @@ public class RandomTest {
                }
             }
         }
-        System.out.println(createdRoot.prettyPrint());
     }
 
     private FileNode updateCreatedTree(FileNode createdCurrent, FileNode current) {
@@ -73,7 +72,6 @@ public class RandomTest {
                 }
             }
         }
-        System.out.println(createdRoot.prettyPrint());
     }
 
     private void ensureNotInside(List<String> ls, String filename) {

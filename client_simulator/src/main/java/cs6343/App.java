@@ -60,15 +60,15 @@ public class App {
 			TreeParser p = new TreeParser();
 			FileNode out = p.readFile(filename);
 			RandomTest test = new RandomTest(out,client);
-			test.walk(10, 100);
-//			test.destructiveWalk(5, 5, .25);
+			test.walk(20, 1000);
+      		test.destructiveWalk(10, 20, .25);
 			System.out.println(client.ls("/"));
 			System.out.println(client.ls("/test"));
-			System.out.println(collector.getSummaryStatistics(Operation.LS));
-			System.out.println(collector.getSummaryStatistics(Operation.MKDIR));
-			System.out.println(collector.getSummaryStatistics(Operation.TOUCH));
-			System.out.println(collector.getSummaryStatistics(Operation.RM));
-			System.out.println(collector.getSummaryStatistics(Operation.RMDIR));
+			System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));
+			System.out.println("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
+			System.out.println("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
+			System.out.println("RM: " + collector.getSummaryStatistics(Operation.RM));
+			System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
 			System.exit(0);
 		}
 		else {
