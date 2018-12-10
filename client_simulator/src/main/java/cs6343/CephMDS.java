@@ -96,42 +96,42 @@ public class CephMDS implements IMetaData {
 
 			Node node = root;
 			Node resultNode = root;
-			int j=0;
+			int j = 0;
 			for (int i = 1; i < vals.length; i++) {
 				node = node.map.get(vals[i]);
 				if (node == null)
 					break;
-				
+
 				if (node.val != null) {
 					resultNode = node;
-					j=i;
+					j = i;
 				}
 			}
 
 			String newPath = null;
 			if (!resultNode.key.equals("/")) {
-				String[] newPathArrAfter = Arrays.copyOfRange(vals, j+1, vals.length);
-				String[] newPathArrBefore = Arrays.copyOfRange(vals, 1, j+1);
+				String[] newPathArrAfter = Arrays.copyOfRange(vals, j + 1, vals.length);
+				String[] newPathArrBefore = Arrays.copyOfRange(vals, 1, j + 1);
 				newPath = "/" + String.join("/", newPathArrBefore) + "%" + String.join("/", newPathArrAfter);
 			} else {
 				String[] newPathArr = Arrays.copyOfRange(vals, 1, vals.length);
 				newPath = resultNode.key + String.join("/", newPathArr);
 			}
 
-			Node returnVal= new Node(resultNode.key, resultNode.val, newPath);
+			Node returnVal = new Node(resultNode.key, resultNode.val, newPath);
 			return returnVal;
 		}
 
 		public void remove(String pathParam) {
-			if(pathParam==null)
+			if (pathParam == null)
 				return;
-			
+
 			int idx = pathParam.indexOf('%');
-			String path=pathParam;
-			
-			if(idx!=-1)
-				path=path.substring(0,idx);
-			
+			String path = pathParam;
+
+			if (idx != -1)
+				path = path.substring(0, idx);
+
 			String[] vals = path.split("/");
 			vals[0] = "/";
 			Node node = root;
@@ -204,10 +204,14 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean mkdir(String dirName) {
+		return createNode(dirName, "mkdir");
+	}
+
+	public boolean createNode(String dirName, String cmd) {
 
 		Node node = this.cache.get(dirName);
 		while (true) {
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "mkdir " + node.path,
+			Result<String> result = restClient.postForObject("http://" + node.val + "/command", cmd + " " + node.path,
 					Result.class);
 
 			if (result.isOperationSuccess())
@@ -262,38 +266,40 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean touch(String filePath) {
-		// TODO Auto-generated method stub
-		return false;
+		return createNode(filePath, "touch");
 	}
 
 	@Override
 	public boolean rm(String filePath) {
-		// TODO Auto-generated method stub
-		return false;
+		return nodeDel(filePath, "rm");
 	}
 
 	@Override
 	public boolean rmdir(String dirName) {
+		return nodeDel(dirName, "rmdir");
+	}
+
+	private boolean nodeDel(String dirName, String cmd) {
 		Node node = this.cache.get(dirName);
 		while (true) {
 
 			if (node.getPath().endsWith("%")) {
 				int indx = node.getPath().lastIndexOf('/');
-				String tmp2=node.getPath().substring(0, indx);
+				String tmp2 = node.getPath().substring(0, indx);
 				String dirToDelete = node.getPath().substring(indx + 1, node.getPath().length() - 1);
 				Node previousServer = this.cache.get(node.getPath().substring(0, indx));
 				String tmpPath;
 				if (previousServer.getPath().endsWith("/") || previousServer.getPath().endsWith("%")) {
-					tmpPath = previousServer.getPath()+dirToDelete;
+					tmpPath = previousServer.getPath() + dirToDelete;
 				} else {
-					tmpPath = previousServer.getPath() + "/"+dirToDelete;
+					tmpPath = previousServer.getPath() + "/" + dirToDelete;
 				}
 
 				node.setPath(tmpPath);
 				node.setVal(previousServer.getVal());
 			}
 
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "rmdir " + node.path,
+			Result<String> result = restClient.postForObject("http://" + node.val + "/command", cmd + " " + node.path,
 					Result.class);
 
 			if (result.isOperationSuccess())

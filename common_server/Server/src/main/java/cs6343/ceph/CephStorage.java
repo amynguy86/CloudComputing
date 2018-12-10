@@ -125,8 +125,8 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> partition(String data,boolean delay) {
-		//TODO delay work
+	public Result<String> partition(String data, boolean delay) {
+		// TODO delay work
 		logger.info("Executing Command partition, data: {}", data);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -346,12 +346,6 @@ public class CephStorage extends Storage {
 	}
 
 	@Override
-	public Result<String> rm(String path, boolean delay) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Result<String> mv(String path, boolean delay) {
 		// TODO Auto-generated method stub
 		return null;
@@ -386,4 +380,28 @@ public class CephStorage extends Storage {
 		}
 		return result;
 	}
+
+	@Override
+	public Result<String> rm(String path, boolean delay) {
+		Result<String> result = new Result<>();
+		result.setOperationSuccess(false);
+		if (this.isRoot) {
+			return this.storage.rm(path, delay);
+		} else {
+			Result<String[]> isPathValid = validateCephPath(path);
+			if (!isPathValid.isOperationSuccess()) {
+				result.setOperationReturnMessage(isPathValid.getOperationReturnMessage());
+			} else {
+				if (isPathValid.getOperationReturnVal()[1].equals(this.storage.getRoot().getName())) {
+					result.setOperationReturnMessage("Invalid Path");
+				} else {
+					RemoteLock lock = readLockParent();
+					result = this.storage.rm(isPathValid.getOperationReturnVal()[1], delay);
+					lock.unlock();
+				}
+			}
+		}
+		return result;
+	}
+
 }

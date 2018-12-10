@@ -100,12 +100,13 @@ public class CentralizedStorage extends Storage {
 		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
-		if (unlockAtEnd){
-			if(delay){
+		if (unlockAtEnd) {
+			if (delay) {
 				try {
 					Thread.sleep(15000);
-				} catch (InterruptedException e){
-					e.printStackTrace();;
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					;
 				}
 			}
 			this.unLockRead(listInodes);
@@ -115,8 +116,7 @@ public class CentralizedStorage extends Storage {
 
 	@Override
 	public Result<String> rm(String path, boolean delay) {
-		// TODO Auto-generated method stub
-		return null;
+		return deleteNode(path, FileType.FILE, true, null, delay);
 	}
 
 	public static boolean isPhysicalNode(Inode inode) {
@@ -285,11 +285,11 @@ public class CentralizedStorage extends Storage {
 
 	@Override
 	public Result<String> rmdir(String path, boolean delay) {
-		return rmdir(path, true, null,delay);
+		return deleteNode(path, FileType.DIRECTORY, true, null, delay);
 	}
 
 	public Result<String> rmdir(String path, CephServer cephServer, boolean delay) {
-		return rmdir(path, true, cephServer,delay);
+		return deleteNode(path, FileType.DIRECTORY, true, cephServer, delay);
 	}
 
 	public static String normalizePath(String path) {
@@ -300,7 +300,17 @@ public class CentralizedStorage extends Storage {
 		return returnPath;
 	}
 
-	public Result<String> rmdir(String path, boolean unlockAtEnd, CephServer cephServer, boolean delay) {
+	private boolean fileTypeCorrect(Inode dirToDeleteInode, FileType fileType) {
+
+		if (isPhysicalNode(dirToDeleteInode)) {
+			return ((PhysicalInode) dirToDeleteInode).getMetaData().getType() == fileType;
+		} else {
+			return fileType.equals(FileType.DIRECTORY);
+		}
+	}
+
+	public Result<String> deleteNode(String path, FileType fileType, boolean unlockAtEnd, CephServer cephServer,
+			boolean delay) {
 		logger.info("Executing Command RMDIR, data: {}", path);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
@@ -336,13 +346,14 @@ public class CentralizedStorage extends Storage {
 				try {
 					parentInode.writeLock(LockOperation.LOCK);
 					dirToDeleteInode = ((PhysicalInode) parentInode).getChild(dirToDelete);
-					if (dirToDeleteInode != null) {
+					if (dirToDeleteInode != null && fileTypeCorrect(dirToDeleteInode, fileType)) {
 						if (!isPhysicalNode(dirToDeleteInode)) {
 							result = cephServer.sendRemovePartition(dirToDeleteInode.getPath(),
 									dirToDeleteInode.getServerId());
+
 						} else {
-							if (cephServer != null) {
-								result = cephServer.findAndDeleteVirtualNodes((PhysicalInode)dirToDeleteInode);
+							if (cephServer != null && ((PhysicalInode) dirToDeleteInode).getMetaData().getType()==FileType.DIRECTORY ) {
+								result = cephServer.findAndDeleteVirtualNodes((PhysicalInode) dirToDeleteInode);
 							} else {
 								result.setOperationSuccess(true);
 								result.setOperationReturnVal("Directory Deleted Successfull");
@@ -351,9 +362,13 @@ public class CentralizedStorage extends Storage {
 						((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());
 
 					} else {
-						result.setOperationReturnMessage("Directory " + dirToDelete + " does not exist"); }
+						result.setOperationReturnMessage(
+								"Directory/File " + dirToDeleteInode.getPath() + " does not exist");
+					}
+
 					if (unlockAtEnd)
 						parentInode.writeLock(LockOperation.UNLOCK);
+
 				} catch (RedirectException ex) {
 					result.setOperationReturnMessage(createRedirectMsg(parentInode));
 				} catch (OperationNotSupportedException ex) {
