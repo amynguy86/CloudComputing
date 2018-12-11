@@ -37,7 +37,6 @@ public class RandomTest {
                }
             }
         }
-        System.out.println(createdRoot.prettyPrint());
     }
 
     private FileNode updateCreatedTree(FileNode createdCurrent, FileNode current) {
@@ -63,7 +62,7 @@ public class RandomTest {
                     currentPath = subfile.isDirectory ? newPath + "/" : newPath;
                     current = subfile;
                 } else {
-                    if(current.isDirectory){
+                    if(subfile.isDirectory){
                         mds.rmdir(newPath);
                     } else  {
                         mds.rm(newPath);
@@ -73,7 +72,6 @@ public class RandomTest {
                 }
             }
         }
-        System.out.println(createdRoot.prettyPrint());
     }
 
     private void ensureNotInside(List<String> ls, String filename) {

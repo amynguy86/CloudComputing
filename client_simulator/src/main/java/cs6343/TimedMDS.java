@@ -30,17 +30,6 @@ public class TimedMDS implements IMetaData {
 	}
 
 	@Override
-	public boolean mkdir(String dirName) {
-		long nanoTimeStart = System.nanoTime();
-		boolean result = wrapped.mkdir(dirName);
-		long nanoTimeEnd = System.nanoTime();
-		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
-		logger.info(mkdirMsg + time);
-		collector.addStat(Operation.MKDIR, time);
-		return result;
-	}
-
-	@Override
 	public List<String> ls(String dirName) {
 		long nanoTimeStart = System.nanoTime();
 		List<String> result = wrapped.ls(dirName);
@@ -50,6 +39,17 @@ public class TimedMDS implements IMetaData {
 		collector.addStat(Operation.LS, time);
 		return result;
 	}
+    @Override
+    public boolean mkdir(String dirName) {
+        long nanoTimeStart = System.nanoTime();
+        boolean result = wrapped.mkdir(dirName);
+        long nanoTimeEnd = System.nanoTime();
+        double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+        logger.info(mkdirMsg + time);
+        if(result)
+            collector.addStat(Operation.MKDIR, time);
+        return result;
+    }
 
 	@Override
 	public boolean touch(String filePath) {
@@ -58,7 +58,8 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeEnd = System.nanoTime();
 		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
 		logger.info(touchMsg + time);
-		collector.addStat(Operation.TOUCH, time);
+		if(result)
+			collector.addStat(Operation.TOUCH, time);
 		return result;
 	}
 

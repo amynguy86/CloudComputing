@@ -20,11 +20,13 @@ public class CassandraMDS implements IMetaData {
 
     public void configureDB()
     {
+        System.out.println("Emptying database.");
         cc.configureDB();
         FileNode root=new FileNode("/",true);
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         cc.insert("/",gson.toJson(root));
+        System.out.println("Database configured.");
     }
 
     public void disconnect()
@@ -50,6 +52,11 @@ public class CassandraMDS implements IMetaData {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         FileNode fileNode=gson.fromJson(dirString, FileNode.class);
+        if(fileNode.getSubFiles()==null)
+        {
+            List<String> emptyList = new ArrayList<>();
+            return emptyList;
+        }
         Map<String, FileNode> subFiles=fileNode.getSubFiles();
         Set<String> keys=subFiles.keySet();
         List<String> subfileList = new ArrayList<String>();
