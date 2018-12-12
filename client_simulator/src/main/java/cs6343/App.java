@@ -72,13 +72,6 @@ public class App {
 			System.exit(0);
 		}
 		else {
-			client.mkdir("/amin");
-			client.mkdir("/amin/amin2");
-			client.mkdir("/amin/amin2/amin3");
-			client.mkdir("/amin/amin2/amin3/amin4");
-			client.mkdir("/amin/amin2/amin3/amin4/amin5");
-			client.mkdir("/amin/amin2/amin3/amin4/amin5/amin6");
-			client.mkdir("/amin/amin2/amin3/amin4/amin5/amin6/amin7");
 			commandLine.begin();
 		}
 	}
