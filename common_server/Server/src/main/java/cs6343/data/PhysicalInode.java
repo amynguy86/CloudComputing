@@ -41,7 +41,7 @@ public class PhysicalInode implements Inode {
 
 	@Override
 	public String toString() {
-		return "Inode [name=" + name + "]";
+		return "Inode [name=" + name + "] "+readWriteLock;
 	}
 
 	public void addChild(Inode inode) {
