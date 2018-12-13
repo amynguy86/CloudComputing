@@ -17,6 +17,7 @@ public abstract class Storage {
     public abstract Result<String> mkdir(String path, boolean delay);
     public abstract Result<String> rmdir(String path, boolean delay);
     public abstract Result<String> mv(String path, boolean delay);
+    public abstract void print();
     public Result<String> partition(String path,boolean delay) throws Exception{
     	throw new Exception("Not Implemented");
     }

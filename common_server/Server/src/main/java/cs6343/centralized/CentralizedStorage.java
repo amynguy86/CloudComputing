@@ -407,4 +407,31 @@ public class CentralizedStorage extends Storage {
 		return null;
 	}
 
+	public String repeat(String a, int c) {
+     StringBuffer b = new StringBuffer();
+     for(int i=0;i<c;i++)
+     {
+    	 b.append(a);
+    	 
+     }
+     return b.toString();
+	}
+	
+	public void print(Inode a, int b) {
+		if(isPhysicalNode(a)) {
+			logger.info(repeat(" ",b)+a.toString());
+			PhysicalInode p = (PhysicalInode)a;
+			for(Inode i : p.getChildren().values()) {
+				print(i,b+1);
+				
+			}
+		}else {
+			logger.info(repeat(" ",b)+a.toString());
+		}
+	}
+	
+	
+	public void print() {
+		print(this.root,0);
+	}
 }

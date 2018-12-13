@@ -404,4 +404,10 @@ public class CephStorage extends Storage {
 		return result;
 	}
 
+	public void print() {
+		this.storage.print();
+		
+	}
+	
+	
 }
