@@ -37,6 +37,9 @@ public class App {
 	@Value("${test.should.delete}")
 	boolean shouldDelete;
 
+	@Value("${test.should.add}")
+	boolean shouldAdd;
+
 	private static String filename;
 
 	private static Logger LOG = LoggerFactory.getLogger(App.class);
@@ -69,7 +72,9 @@ public class App {
 			FileNode out = p.readFile(filename);
 			if(testType.startsWith("Full")){
 				FullTest test = new FullTest(out, client);
-				test.walk();
+				if(shouldAdd){
+					test.walk();
+				}
 				if(shouldDelete){
 					test.destroy();
 				}
