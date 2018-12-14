@@ -25,10 +25,10 @@ public class CommandLine {
 	boolean delay;
 
 	public void begin() {
-		int depth=20;
-		int times=1000;
-		double prob=0.25;
-		if(delay)
+		int depth = 20;
+		int times = 1000;
+		double prob = 0.25;
+		if (delay)
 			client.delayMe();
 		while (true) {
 			try {
@@ -88,6 +88,20 @@ public class CommandLine {
 					else
 						randomTest.destructiveWalk(depth, times, prob);
 					break;
+					
+				case "fullwalk":
+					p = new TreeParser();
+					out = p.readFile(args[1]);
+					FullTest fulltest = new FullTest(out,client);
+					fulltest.walk();
+					break;
+
+				case "fulldwalk":
+					p = new TreeParser();
+					out = p.readFile(args[1]);
+					fulltest = new FullTest(out,client);
+					fulltest.destroy();
+					break;
 				case "print":
 					if (args[1].indexOf("-file=") != -1) {
 						String dir = args[1].substring(0, args[1].indexOf("-file=")).trim();
@@ -117,13 +131,13 @@ public class CommandLine {
 					System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
 					break;
 				case "setup":
-					String d[]=args[1].split(" ");
-					depth=Integer.parseInt(d[0]);
-					times=Integer.parseInt(d[1]);
-					if(d.length==3)
-						prob=Double.parseDouble(d[2]);
-					
-					logger.info("depth:{}, times:{},prob:{}",depth,times,prob);
+					String d[] = args[1].split(" ");
+					depth = Integer.parseInt(d[0]);
+					times = Integer.parseInt(d[1]);
+					if (d.length == 3)
+						prob = Double.parseDouble(d[2]);
+
+					logger.info("depth:{}, times:{},prob:{}", depth, times, prob);
 					break;
 				default:
 					logger.info("Incorrect command");
