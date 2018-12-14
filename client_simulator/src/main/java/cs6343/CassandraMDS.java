@@ -7,8 +7,9 @@ import java.util.ArrayList;
 
 import java.util.Set;
 public class CassandraMDS implements IMetaData {
+    boolean messages=true;
     CassConnector cc;
-    String lockHost="127.0.0.1";
+    String lockHost="127.0.0.1";  //ip address for the lock server.
     int lockPort=6969;
     public CassandraMDS(String IPAddress)
     {
@@ -22,8 +23,9 @@ public class CassandraMDS implements IMetaData {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         cc.insert("/",gson.toJson(root));
-        System.out.println("Database configured.");
+        if(messages) System.out.println("Database configured.");
     }
+
 
     public void disconnect()
     {
@@ -58,6 +60,11 @@ public class CassandraMDS implements IMetaData {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         FileNode fileNode=gson.fromJson(dirString, FileNode.class);
+        if(!fileNode.isDirectory)
+        {
+            if(messages) System.out.println(dirName + "  is not a directory.  ");
+            return null;
+        }
         if(fileNode.getSubFiles()==null)
         {
             List<String> emptyList = new ArrayList<>();
@@ -108,6 +115,10 @@ public class CassandraMDS implements IMetaData {
         lock2.writeLock(filePath);
         fileDeleted=cc.delete(filePath);  //set to false if file didn't exist, true if exists and was deleted
         lock2.unlock(filePath);
+        if(!fileDeleted)
+        {
+          if(messages)  System.out.println(filePath+" does not exist");
+        }
         return fileDeleted;
     }
 
@@ -127,6 +138,7 @@ public class CassandraMDS implements IMetaData {
 
         if(parentString==null) //parent directory does not exist
         {
+           if(messages) System.out.println("Parent directory does not exist. ");
             return false;
         }
         //add directory to the system
@@ -136,6 +148,7 @@ public class CassandraMDS implements IMetaData {
         lock1.unlock(path);
         if(!fileAdded)  //file already exists in system
         {
+           if(messages) System.out.println(path+" already exists.");
             return false;
         }
         //add directory to parent's list of subfiles
@@ -149,14 +162,16 @@ public class CassandraMDS implements IMetaData {
             cc.delete(path);
             lock3.unlock(path);
             lock2.unlock(parentDir);
+            if(messages) System.out.println("Create "+path+" failed.  Parent directory no longer exists. ");
             return false;
         }
         FileNode parentNode=gson.fromJson(parentString,FileNode.class);
         parentNode.addSubFile(newFile);
         cc.edit(parentDir, gson.toJson(parentNode));
         lock2.unlock(parentDir);
+        if(messages&&isDirectory) System.out.println("Directory "+path+"  created.  ");
+        if(messages&&!isDirectory) System.out.println("File "+path+"  created.  ");
         return true;
-
     }
 
     //returns true if directory was successfully removed
@@ -184,7 +199,8 @@ public class CassandraMDS implements IMetaData {
         else
         {
             lock1.unlock(parentDir);
-            return false;  //parent did not exist
+            if(messages) System.out.println("Failed to delete "+dirName);
+            return false;  //parent did not exist, either node is root or something went wrong
         }
         lock1.unlock(parentDir);
         RemoteLock lock2 = new RemoteLock(lockHost,lockPort);
@@ -206,7 +222,14 @@ public class CassandraMDS implements IMetaData {
                 }
             }
         }
-
+        if(fileDeleted)
+        {
+            if(messages) System.out.println(dirName+" deleted.  ");
+        }
+        else
+        {
+            if(messages) System.out.println(dirName + " not found.  ");
+        }
         return fileDeleted;
     }
 
@@ -241,6 +264,11 @@ public class CassandraMDS implements IMetaData {
         String rootString=cc.read("/");
         FileNode rootNode=gson.fromJson(rootString,FileNode.class);
         return rootNode;
+    }
+
+    public void disableMessages()
+    {
+        messages=false;
     }
 	@Override
 	public boolean partition(String data) {
