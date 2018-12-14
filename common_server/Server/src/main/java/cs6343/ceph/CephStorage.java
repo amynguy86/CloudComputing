@@ -239,7 +239,7 @@ public class CephStorage extends Storage {
 					.invoke(cephServer, serverRqst.getData());
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error("ex:",ex);
 			result = new Result<>();
 			result.setOperationSuccess(false);
 			result.setOperationReturnMessage(ex.getMessage());
