@@ -20,6 +20,7 @@ public class CephMDS implements IMetaData {
 	private String rootServer;
 	private CephCache cache;
 	public static Logger logger = LoggerFactory.getLogger(CephMDS.class);
+	private String command;
 
 	public static class CephCache {
 
@@ -172,12 +173,15 @@ public class CephMDS implements IMetaData {
 		this.rootServer = rootServer;
 		this.cache = new CephCache(rootServer);
 		this.restClient = new RestTemplate();
+		this.command = "/command";
+
 	}
 
 	public CephMDS(String rootServer, RestTemplate restTemplate, CephCache cache) {
 		this.rootServer = rootServer;
 		this.cache = cache;
 		this.restClient = restTemplate;
+		this.command = "/command";
 	}
 
 	public boolean isRedirect(String msg) {
@@ -204,7 +208,7 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean mkdir(String dirName) {
-		logger.info("mkdir "+dirName);
+		logger.info("mkdir " + dirName);
 		return createNode(dirName, "mkdir");
 	}
 
@@ -212,7 +216,7 @@ public class CephMDS implements IMetaData {
 
 		Node node = this.cache.get(dirName);
 		while (true) {
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command", cmd + " " + node.path,
+			Result<String> result = restClient.postForObject("http://" + node.val + command, cmd + " " + node.path,
 					Result.class);
 
 			if (result.isOperationSuccess())
@@ -236,10 +240,10 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public List<String> ls(String dirName) {
-		logger.info("ls "+dirName);
+		logger.info("ls " + dirName);
 		Node node = this.cache.get(dirName);
 		while (true) {
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "ls " + node.path,
+			Result<String> result = restClient.postForObject("http://" + node.val + command, "ls " + node.path,
 					Result.class);
 
 			if (result.isOperationSuccess()) {
@@ -268,19 +272,19 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean touch(String filePath) {
-		logger.info("touch "+filePath);
+		logger.info("touch " + filePath);
 		return createNode(filePath, "touch");
 	}
 
 	@Override
 	public boolean rm(String filePath) {
-		logger.info("rm "+filePath);
+		logger.info("rm " + filePath);
 		return nodeDel(filePath, "rm");
 	}
 
 	@Override
 	public boolean rmdir(String dirName) {
-		logger.info("rmdir "+dirName);
+		logger.info("rmdir " + dirName);
 		return nodeDel(dirName, "rmdir");
 	}
 
@@ -304,7 +308,7 @@ public class CephMDS implements IMetaData {
 				node.setVal(previousServer.getVal());
 			}
 
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command", cmd + " " + node.path,
+			Result<String> result = restClient.postForObject("http://" + node.val + command, cmd + " " + node.path,
 					Result.class);
 
 			if (result.isOperationSuccess())
@@ -328,7 +332,7 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean partition(String data) {
-		logger.info("partition "+data);
+		logger.info("partition " + data);
 		String[] tokenizer = data.split(",");
 
 		if (tokenizer.length != 2) {
@@ -341,7 +345,7 @@ public class CephMDS implements IMetaData {
 
 		Node node = this.cache.get(dirName);
 		while (true) {
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command",
+			Result<String> result = restClient.postForObject("http://" + node.val + command,
 					"partition " + node.path + "," + server, Result.class);
 
 			if (result.isOperationSuccess())
@@ -368,7 +372,7 @@ public class CephMDS implements IMetaData {
 		Node node = this.cache.get(path);
 		Result<String> result = restClient.postForObject("http://" + node.val + "/command", "print" + " " + node.path,
 				Result.class);
-		if (result.getOperationReturnVal()!=null)
+		if (result.getOperationReturnVal() != null)
 			return result.getOperationReturnVal();
 		else {
 			logger.info(result.getOperationReturnMessage());
@@ -382,7 +386,7 @@ public class CephMDS implements IMetaData {
 		if (nodes != null) {
 			for (String node : nodes) {
 				String newPath = path + node;
-				logger.info("Deleting:"+newPath);
+				logger.info("Deleting:" + newPath);
 				if (!this.rmdir(newPath)) {
 					if (!this.rm(newPath))
 						return false;
@@ -390,5 +394,10 @@ public class CephMDS implements IMetaData {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public void delayMe() {
+		this.command="/commandWithDelay";
 	}
 }

@@ -9,6 +9,7 @@ import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,11 +21,15 @@ public class CommandLine {
 	@Autowired
 	StatCollector collector;
 	RandomTest randomTest;
+	@Value("${delay}")
+	boolean delay;
 
 	public void begin() {
 		int depth=20;
 		int times=1000;
 		double prob=0.25;
+		if(delay)
+			client.delayMe();
 		while (true) {
 			try {
 				System.out.print("ENTER COMMAND HERE:--------->");

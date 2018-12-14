@@ -108,4 +108,10 @@ public class TimedMDS implements IMetaData {
 	public boolean deleteChildren(String path) {
 		return wrapped.deleteChildren(path);
 	}
+
+	@Override
+	public void delayMe() {
+		// TODO Auto-generated method stub
+		wrapped.delayMe();
+	}
 }

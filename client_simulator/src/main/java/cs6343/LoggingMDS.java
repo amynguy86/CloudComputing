@@ -50,4 +50,10 @@ public class LoggingMDS implements IMetaData {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public void delayMe() {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -28,7 +28,7 @@ public class TreeParser{
             numProcessed++;
             ParsedLine line = iter.next();
             FileNode file = new FileNode(line.filename, line.isDirectory);
-            while(currDepth > line.depth){
+            while(currDepth > line.depth){ 
                 curr = path.pop();
                 currDepth--;
             }
