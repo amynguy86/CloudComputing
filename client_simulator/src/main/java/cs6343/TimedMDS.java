@@ -96,4 +96,15 @@ public class TimedMDS implements IMetaData {
 		collector.addStat(Operation.PARTITION, time);
 		return result;
 	}
+
+	@Override
+	public String printTree(String path) {
+		// TODO Auto-generated method stub
+		return wrapped.printTree(path);
+	}
+
+	@Override
+	public boolean deleteChildren(String path) {
+		return wrapped.deleteChildren(path);
+	}
 }

@@ -330,13 +330,13 @@ public class CephMDS implements IMetaData {
 			return false;
 		}
 
-		String dirName=tokenizer[0];
-		String server=tokenizer[1];
-		
+		String dirName = tokenizer[0];
+		String server = tokenizer[1];
+
 		Node node = this.cache.get(dirName);
 		while (true) {
-			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "partition " + node.path + " "+server,
-					Result.class);
+			Result<String> result = restClient.postForObject("http://" + node.val + "/command",
+					"partition " + node.path + " " + server, Result.class);
 
 			if (result.isOperationSuccess())
 				return true;
@@ -355,5 +355,34 @@ public class CephMDS implements IMetaData {
 				return false;
 			}
 		}
+	}
+
+	@Override
+	public String printTree(String path) {
+		Node node = this.cache.get(path);
+		Result<String> result = restClient.postForObject("http://" + node.val + "/command", "print" + " " + node.path,
+				Result.class);
+		if (result.getOperationReturnVal()!=null)
+			return result.getOperationReturnVal();
+		else {
+			logger.info(result.getOperationReturnMessage());
+			return "";
+		}
+	}
+
+	@Override
+	public boolean deleteChildren(String path) {
+		List<String> nodes = this.ls(path);
+		if (nodes != null) {
+			for (String node : nodes) {
+				String newPath = path + node;
+				logger.info("Deleting:"+newPath);
+				if (!this.rmdir(newPath)) {
+					if (!this.rm(newPath))
+						return false;
+				}
+			}
+		}
+		return true;
 	}
 }

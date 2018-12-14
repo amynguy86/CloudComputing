@@ -404,10 +404,19 @@ public class CephStorage extends Storage {
 		return result;
 	}
 
-	public void print() {
-		this.storage.print();
-		
+	public Result<String> print(String path,boolean delay) {
+		Result<String> result = new Result<>();
+		result.setOperationSuccess(false);
+		if (this.isRoot) {
+			return this.storage.print(path, delay);
+		} else {
+			Result<String[]> isPathValid = validateCephPath(path);
+			if (!isPathValid.isOperationSuccess()) {
+				result.setOperationReturnMessage(isPathValid.getOperationReturnMessage());
+			} else {
+				result = this.storage.print(isPathValid.getOperationReturnVal()[1], delay);
+			}
+		}
+		return result;
 	}
-	
-	
 }

@@ -38,4 +38,16 @@ public class LoggingMDS implements IMetaData {
 	      System.out.println("Partition: " + data);
 		return false;
 	}
+
+	@Override
+	public String printTree(String path) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean deleteChildren(String path) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

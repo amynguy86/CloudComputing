@@ -352,7 +352,8 @@ public class CentralizedStorage extends Storage {
 									dirToDeleteInode.getServerId());
 
 						} else {
-							if (cephServer != null && ((PhysicalInode) dirToDeleteInode).getMetaData().getType()==FileType.DIRECTORY ) {
+							if (cephServer != null && ((PhysicalInode) dirToDeleteInode).getMetaData()
+									.getType() == FileType.DIRECTORY) {
 								result = cephServer.findAndDeleteVirtualNodes((PhysicalInode) dirToDeleteInode);
 							} else {
 								result.setOperationSuccess(true);
@@ -408,30 +409,59 @@ public class CentralizedStorage extends Storage {
 	}
 
 	public String repeat(String a, int c) {
-     StringBuffer b = new StringBuffer();
-     for(int i=0;i<c;i++)
-     {
-    	 b.append(a);
-    	 
-     }
-     return b.toString();
+		StringBuffer b = new StringBuffer();
+		for (int i = 0; i < c; i++) {
+			b.append(a);
+
+		}
+		return b.toString();
 	}
-	
-	public void print(Inode a, int b) {
-		if(isPhysicalNode(a)) {
-			logger.info(repeat(" ",b)+a.toString());
-			PhysicalInode p = (PhysicalInode)a;
-			for(Inode i : p.getChildren().values()) {
-				print(i,b+1);
-				
+
+	public void print(Inode a, int b,StringBuffer buffer) {
+		if (isPhysicalNode(a)) {
+			logger.info(repeat(" ", b) + a.toString());
+			buffer.append(repeat(" ", b) + a.toString()+"\n");
+			PhysicalInode p = (PhysicalInode) a;
+			for (Inode i : p.getChildren().values()) {
+				print(i, b + 1,buffer);
+
 			}
-		}else {
-			logger.info(repeat(" ",b)+a.toString());
+		} else {
+			logger.info(repeat(" ", b) + a.toString());
+			buffer.append(repeat(" ", b) + a.toString()+"\n");
 		}
 	}
-	
-	
-	public void print() {
-		print(this.root,0);
+
+	public Result<String> print(String path, boolean delay) {
+		Result<String> result = new Result<>();
+		result.setOperationSuccess(false);
+		List<String> list = getPathAsList(path);
+
+		if (list == null) {
+			result.setOperationReturnMessage("Unable to get Nodes,try doing an ls first");
+			return result;
+		}
+
+		PhysicalInode inode = this.root;
+		for (int i = 1; i < list.size(); i++) {
+			Inode nextInode = inode.getChild(list.get(i));
+
+			if (nextInode == null) {
+				result.setOperationReturnMessage("Node not found");
+				return result;
+			}
+
+			if (!this.isPhysicalNode(nextInode)) {
+				result.setOperationReturnMessage("This is not the server hosting that node, ls and try again");
+				return result;
+			}
+			
+			inode=(PhysicalInode) nextInode;
+		}
+		
+		StringBuffer buffer = new StringBuffer();
+		print(inode, 0, buffer);
+		result.setOperationReturnVal(buffer.toString());
+		return result;
 	}
 }

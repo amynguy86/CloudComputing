@@ -67,4 +67,17 @@ public class CentralizedMDS implements IMetaData {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public String printTree(String path) {
+		return "";
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean deleteChildren(String path) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

@@ -63,12 +63,4 @@ public class Controller {
 		Result<String> result = (Result<String>) ((CephStorage) storageSolution).cephServerRqst(command);
 		return result;
 	}
-	
-	@RequestMapping("/print")
-	public String print() throws NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		storageSolution.print();
-		return "Success";
-	}
-	
 }

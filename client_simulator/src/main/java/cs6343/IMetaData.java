@@ -9,4 +9,6 @@ public interface IMetaData {
     public boolean rm(String filePath);
     public boolean rmdir(String dirname);
     public boolean partition(String data);
+    public String printTree(String path);
+    public boolean deleteChildren(String path);
 }

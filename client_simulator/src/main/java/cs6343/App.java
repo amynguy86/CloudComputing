@@ -36,7 +36,8 @@ public class App {
 	private static Logger LOG = LoggerFactory.getLogger(App.class);
 
 	public static void main(String[] args) throws Exception {
-		filename = args[0];
+		if (args.length > 0)
+			filename = args[0];
 		SpringApplication.run(App.class, args);
 	}
 
@@ -59,9 +60,9 @@ public class App {
 		if (!isCommandline) {
 			TreeParser p = new TreeParser();
 			FileNode out = p.readFile(filename);
-			RandomTest test = new RandomTest(out,client);
+			RandomTest test = new RandomTest(out, client);
 			test.walk(20, 1000);
-      		test.destructiveWalk(10, 20, .25);
+			test.destructiveWalk(10, 20, .25);
 			System.out.println(client.ls("/"));
 			System.out.println(client.ls("/test"));
 			System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));
@@ -70,8 +71,7 @@ public class App {
 			System.out.println("RM: " + collector.getSummaryStatistics(Operation.RM));
 			System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
 			System.exit(0);
-		}
-		else {
+		} else {
 			commandLine.begin();
 		}
 	}

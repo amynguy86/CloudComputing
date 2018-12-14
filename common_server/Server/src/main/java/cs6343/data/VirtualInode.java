@@ -80,11 +80,6 @@ public class VirtualInode implements Inode {
 
 	@Override
 	public String toString() {
-		return "VirtualInode{" +
-				"name='" + name + '\'' +
-				", serverId='" + serverId + '\'' +
-				", path='" + path + '\'' +
-				", parent=" + parent +
-				'}';
+		return "VirtualInode [name=" +name + "]"+ " "+path+","+serverId;
 	}
 }
