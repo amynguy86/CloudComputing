@@ -11,4 +11,5 @@ public interface IMetaData {
     public boolean partition(String data);
     public String printTree(String path);
     public boolean deleteChildren(String path);
+    public void delayMe();
 }

@@ -58,6 +58,7 @@ public class RandomTest {
                 FileNode subfile = randomFile(current);
                 if(subfile == null) break;
                 String newPath = currentPath + subfile.filename;
+                double d=random.nextDouble();
                 if(random.nextDouble() > destroyProb){
                     currentPath = subfile.isDirectory ? newPath + "/" : newPath;
                     current = subfile;

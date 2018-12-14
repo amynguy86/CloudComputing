@@ -411,11 +411,19 @@ public class CephStorage extends Storage {
 		if (this.isRoot) {
 			return this.storage.print(path, delay);
 		} else {
+			boolean isStar=false;
+			if(path.endsWith("*")) {
+				isStar=true;
+				path=path.substring(0,path.length()-1);
+			}
+			
 			Result<String[]> isPathValid = validateCephPath(path);
 			if (!isPathValid.isOperationSuccess()) {
 				result.setOperationReturnMessage(isPathValid.getOperationReturnMessage());
 			} else {
-				result = this.storage.print(isPathValid.getOperationReturnVal()[1], delay);
+				String newPath=isPathValid.getOperationReturnVal()[1];
+				newPath=isStar?newPath.endsWith("/")? newPath+"*":newPath+"/*" : newPath;
+				result = this.storage.print(newPath, delay);
 			}
 		}
 		return result;

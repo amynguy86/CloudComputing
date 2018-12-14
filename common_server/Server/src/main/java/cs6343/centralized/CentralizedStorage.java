@@ -101,14 +101,9 @@ public class CentralizedStorage extends Storage {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
 		if (unlockAtEnd) {
-			if (delay) {
-				try {
-					Thread.sleep(15000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					;
-				}
-			}
+			if (delay)
+				delay();
+
 			this.unLockRead(listInodes);
 		}
 		return result;
@@ -258,25 +253,21 @@ public class CentralizedStorage extends Storage {
 					} else {
 						result.setOperationReturnMessage("Directory already exists");
 					}
-					if (unlockAtEnd)
+					if (unlockAtEnd) {
+						if (delay)
+							delay();
 						parentInode.writeLock(LockOperation.UNLOCK);
+					}
 				} catch (RedirectException ex) {
 					result.setOperationReturnMessage(createRedirectMsg(parentInode));
 				}
 			}
-		} else
-
-		{
+		} else {
 			result.setOperationReturnMessage(result2.getOperationReturnMessage());
 		}
 		if (unlockAtEnd) {
 			if (delay) {
-				try {
-					Thread.sleep(15000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					;
-				}
+				delay();
 			}
 			this.unLockRead(listInodes);
 		}
@@ -363,19 +354,24 @@ public class CentralizedStorage extends Storage {
 						((PhysicalInode) parentInode).getChildren().remove(dirToDeleteInode.getName());
 
 					} else {
-						result.setOperationReturnMessage(
-								"Directory/File " + path + " does not exist");
+						result.setOperationReturnMessage("Directory/File " + path + " does not exist");
 					}
 
-					if (unlockAtEnd)
-						parentInode.writeLock(LockOperation.UNLOCK);
+					if (unlockAtEnd) {
+						if (delay)
+							delay();
 
+						parentInode.writeLock(LockOperation.UNLOCK);
+					}
 				} catch (RedirectException ex) {
 					result.setOperationReturnMessage(createRedirectMsg(parentInode));
 				} catch (OperationNotSupportedException ex) {
 					result.setOperationReturnMessage(ex.getMessage());
-					if (unlockAtEnd)
+					if (unlockAtEnd) {
+						if (delay)
+							delay();
 						parentInode.writeLock(LockOperation.UNLOCK);
+					}
 				}
 			}
 		} else
@@ -385,12 +381,7 @@ public class CentralizedStorage extends Storage {
 		}
 		if (unlockAtEnd) {
 			if (delay) {
-				try {
-					Thread.sleep(15000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					;
-				}
+				delay();
 			}
 			this.unLockRead(listInodes);
 		}
@@ -417,22 +408,29 @@ public class CentralizedStorage extends Storage {
 		return b.toString();
 	}
 
-	public void print(Inode a, int b,StringBuffer buffer) {
+	public void print(Inode a, int b, StringBuffer buffer) {
 		if (isPhysicalNode(a)) {
 			logger.info(repeat(" ", b) + a.toString());
-			buffer.append(repeat(" ", b) + a.toString()+"\n");
+			buffer.append(repeat(" ", b) + a.toString() + "\n");
 			PhysicalInode p = (PhysicalInode) a;
 			for (Inode i : p.getChildren().values()) {
-				print(i, b + 1,buffer);
+				print(i, b + 1, buffer);
 
 			}
 		} else {
 			logger.info(repeat(" ", b) + a.toString());
-			buffer.append(repeat(" ", b) + a.toString()+"\n");
+			buffer.append(repeat(" ", b) + a.toString() + "\n");
 		}
 	}
 
 	public Result<String> print(String path, boolean delay) {
+		boolean isStar =false;
+		
+		if(path.endsWith("*")) {
+			path=path.substring(0,path.length()-1);
+			isStar=true;
+		}
+		
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
 		List<String> list = getPathAsList(path);
@@ -455,13 +453,27 @@ public class CentralizedStorage extends Storage {
 				result.setOperationReturnMessage("This is not the server hosting that node, ls and try again");
 				return result;
 			}
-			
-			inode=(PhysicalInode) nextInode;
+
+			inode = (PhysicalInode) nextInode;
 		}
 		
+		if(isStar) {
 		StringBuffer buffer = new StringBuffer();
 		print(inode, 0, buffer);
 		result.setOperationReturnVal(buffer.toString());
+		}
+		else {
+			result.setOperationReturnVal(inode.toString());
+		}
 		return result;
+	}
+
+	public void delay() {
+		try {
+			Thread.sleep(15000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+
+		}
 	}
 }
