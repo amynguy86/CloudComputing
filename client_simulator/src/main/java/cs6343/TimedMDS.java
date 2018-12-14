@@ -46,7 +46,7 @@ public class TimedMDS implements IMetaData {
         long nanoTimeEnd = System.nanoTime();
         double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
         logger.info(mkdirMsg + time);
-        if(result)
+        //if(result)
             collector.addStat(Operation.MKDIR, time);
         return result;
     }
@@ -58,7 +58,8 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeEnd = System.nanoTime();
 		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
 		logger.info(touchMsg + time);
-		if(result)
+		//Measuring Response time is needed as well
+		//if(result)
 			collector.addStat(Operation.TOUCH, time);
 		return result;
 	}

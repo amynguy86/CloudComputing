@@ -30,7 +30,7 @@ public abstract class Storage {
     		Result<String> result = new Result<>();
     		result.setOperationSuccess(false);
     		result.setOperationReturnMessage("Exception:"+ ex.getMessage());
-    		ex.printStackTrace();
+    		logger.error("ex:",ex);
     		return result;
     	}
     	
@@ -44,7 +44,7 @@ public abstract class Storage {
     		Result<String> result = new Result<>();
     		result.setOperationSuccess(false);
     		result.setOperationReturnMessage("Exception:"+ ex.getMessage());
-    		ex.printStackTrace();
+    		logger.error("ex:",ex);
     		return result;
     	}    	
     }

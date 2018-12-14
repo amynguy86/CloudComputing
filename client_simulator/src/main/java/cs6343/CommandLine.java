@@ -17,9 +17,14 @@ public class CommandLine {
 	public static Logger logger = LoggerFactory.getLogger(CommandLine.class);
 	@Autowired
 	IMetaData client;
+	@Autowired
+	StatCollector collector;
 	RandomTest randomTest;
 
 	public void begin() {
+		int depth=20;
+		int times=1000;
+		double prob=0.25;
 		while (true) {
 			try {
 				System.out.print("ENTER COMMAND HERE:--------->");
@@ -70,13 +75,13 @@ public class CommandLine {
 					TreeParser p = new TreeParser();
 					FileNode out = p.readFile(args[1]);
 					randomTest = new RandomTest(out, client);
-					randomTest.walk(20, 1000);
+					randomTest.walk(depth, times);
 					break;
 				case "dwalk":
 					if (randomTest == null)
 						logger.error("You must walk first");
 					else
-						randomTest.destructiveWalk(20, 1000, .25);
+						randomTest.destructiveWalk(depth, times, prob);
 					break;
 				case "print":
 					if (args[1].indexOf("-file=") != -1) {
@@ -98,6 +103,22 @@ public class CommandLine {
 						logger.info("ok");
 					else
 						logger.info("fail");
+					break;
+				case "stats":
+					System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));
+					System.out.println("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
+					System.out.println("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
+					System.out.println("RM: " + collector.getSummaryStatistics(Operation.RM));
+					System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
+					break;
+				case "setup":
+					String d[]=args[1].split(" ");
+					depth=Integer.parseInt(d[0]);
+					times=Integer.parseInt(d[1]);
+					if(args.length==3)
+						prob=Double.parseDouble(d[2]);
+					
+					logger.info("depth:{}, times:{},prob:{}",depth,times,prob);
 					break;
 				default:
 					logger.info("Incorrect command");

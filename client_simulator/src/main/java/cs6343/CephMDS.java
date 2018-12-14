@@ -204,6 +204,7 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean mkdir(String dirName) {
+		logger.info("mkdir "+dirName);
 		return createNode(dirName, "mkdir");
 	}
 
@@ -235,6 +236,7 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public List<String> ls(String dirName) {
+		logger.info("ls "+dirName);
 		Node node = this.cache.get(dirName);
 		while (true) {
 			Result<String> result = restClient.postForObject("http://" + node.val + "/command", "ls " + node.path,
@@ -266,16 +268,19 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean touch(String filePath) {
+		logger.info("touch "+filePath);
 		return createNode(filePath, "touch");
 	}
 
 	@Override
 	public boolean rm(String filePath) {
+		logger.info("rm "+filePath);
 		return nodeDel(filePath, "rm");
 	}
 
 	@Override
 	public boolean rmdir(String dirName) {
+		logger.info("rmdir "+dirName);
 		return nodeDel(dirName, "rmdir");
 	}
 
@@ -323,6 +328,7 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean partition(String data) {
+		logger.info("partition "+data);
 		String[] tokenizer = data.split(",");
 
 		if (tokenizer.length != 2) {
@@ -336,7 +342,7 @@ public class CephMDS implements IMetaData {
 		Node node = this.cache.get(dirName);
 		while (true) {
 			Result<String> result = restClient.postForObject("http://" + node.val + "/command",
-					"partition " + node.path + " " + server, Result.class);
+					"partition " + node.path + "," + server, Result.class);
 
 			if (result.isOperationSuccess())
 				return true;
