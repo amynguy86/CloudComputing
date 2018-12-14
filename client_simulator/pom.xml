@@ -89,7 +89,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.5.0</version>
 				<configuration>
-					<mainClass>cs6343.App</mainClass>
+					<mainClass>cs6343.CassUnixApp</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

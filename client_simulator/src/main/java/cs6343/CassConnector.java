@@ -13,7 +13,7 @@ public class CassConnector {
 	public CassConnector(String ipAddress) //the IP address of a node in the cassandra system, assumes default port 9042
 	{
 		try {
-			cluster = Cluster.builder().addContactPoint(ipAddress).build();
+			cluster = Cluster.builder().addContactPoint(ipAddress).withSocketOptions(new SocketOptions().setConnectTimeoutMillis(15000)).build();
 			session = cluster.connect();
 		}
 		catch(Exception e) {}
