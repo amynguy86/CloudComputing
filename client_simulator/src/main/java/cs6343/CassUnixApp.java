@@ -16,7 +16,8 @@ String input;
          String cmd=input.split(" ")[0];
          String arg="";
          if(input.split(" ").length>=2) {
-             arg = input.split(" ")[1];
+            int spaceIndex=input.indexOf(" ");
+            arg=input.substring(spaceIndex+1);
          }
          if(cmd.equals("configure"))
          {
@@ -54,10 +55,9 @@ String input;
              cmds.rmdir(arg);
          }
 
-
-
     }
     scanner.close();
+
 }
 else {
 
