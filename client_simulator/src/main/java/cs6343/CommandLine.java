@@ -115,7 +115,7 @@ public class CommandLine {
 					String d[]=args[1].split(" ");
 					depth=Integer.parseInt(d[0]);
 					times=Integer.parseInt(d[1]);
-					if(args.length==3)
+					if(d.length==3)
 						prob=Double.parseDouble(d[2]);
 					
 					logger.info("depth:{}, times:{},prob:{}",depth,times,prob);
