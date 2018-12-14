@@ -4,7 +4,7 @@ import java.util.Scanner;
 public class CassUnixApp {
     public static void main(String[] args){
 
-CassandraMDS cmds = new CassandraMDS("127.0.0.1");
+CassandraMDS cmds = new CassandraMDS("127.0.0.1");  //IP address for a node on the cassandra server
 
 
 if(args.length!=0 && args[0].equals("commandline"))
@@ -22,25 +22,36 @@ String input;
          {
              cmds.configureDB();
          }
-         if(cmd.equals("mkdir"))
+         else if(arg.equals(""))
          {
-            System.out.println(cmds.mkdir(arg));
+             System.out.println("Invalid argument");
          }
-         if(cmd.equals("touch"))
+         else if(cmd.equals("lock"))
          {
-             System.out.println(cmds.touch(arg));
+            System.out.println("Locking file "+arg);
+             cmds.lock(arg);
+             System.out.println(arg+" unlocked");
          }
-         if(cmd.equals("rm"))
+         else if(cmd.equals("mkdir"))
          {
-             System.out.println(cmds.rm(arg));
+
+            cmds.mkdir(arg);
          }
-         if(cmd.equals("ls"))
+         else if(cmd.equals("touch"))
+         {
+             cmds.touch(arg);
+         }
+         else if(cmd.equals("rm"))
+         {
+             cmds.rm(arg);
+         }
+         else if(cmd.equals("ls"))
          {
              System.out.println(cmds.ls(arg));
          }
-         if(cmd.equals("rmdir"))
+         else if(cmd.equals("rmdir"))
          {
-             System.out.println(cmds.rmdir(arg));
+             cmds.rmdir(arg);
          }
 
 
@@ -53,7 +64,37 @@ else {
 
 
     cmds.configureDB();
+    cmds.disableMessages();
+    cmds.mkdir("/a");
+    cmds.mkdir("/a/a");
+    cmds.mkdir("/a/b");
+    cmds.mkdir("/a/a/a");
+    cmds.mkdir("/a/a/b");
+    cmds.mkdir("/a/b/a");
+    cmds.mkdir("/a/b/b");
+    cmds.mkdir("/b");
+    cmds.mkdir("/b/a");
+    cmds.mkdir("/b/b");
+    cmds.mkdir("/b/a/a");
+    cmds.mkdir("/b/a/b");
+    cmds.mkdir("/b/b/a");
+    cmds.mkdir("/b/b/b");
 
+
+
+
+
+
+    FileNode rootNode=cmds.getRootNode();
+    StatCollector statCollector= new StatCollector();
+    TimedMDS timedMDS=new TimedMDS(cmds,"Unix", statCollector);
+
+    RandomTest tester= new RandomTest(rootNode, timedMDS);
+    tester.walk(10,10);
+    System.out.println("Random test finished.  ");
+    System.out.println(statCollector.getSummaryStatistics(Operation.LS));
+    System.out.println(statCollector.getSummaryStatistics(Operation.MKDIR));
+    System.out.println(statCollector.getSummaryStatistics(Operation.TOUCH));
     /*
     cmds.mkdir("/a");
   //  cmds.mkdir("/b");
