@@ -364,7 +364,7 @@ public class CentralizedStorage extends Storage {
 
 					} else {
 						result.setOperationReturnMessage(
-								"Directory/File " + dirToDeleteInode.getPath() + " does not exist");
+								"Directory/File " + path + " does not exist");
 					}
 
 					if (unlockAtEnd)
