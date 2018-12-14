@@ -2,7 +2,7 @@ package cs6343;
 
 import java.util.*;
 
-public class RandomTest {
+public class RandomTest{
     private FileNode sampleRoot;
     private FileNode createdRoot = new FileNode("/",  true);
     private Random random = new Random();
