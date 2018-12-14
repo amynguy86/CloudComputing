@@ -336,7 +336,7 @@ public class CephMDS implements IMetaData {
 		Node node = this.cache.get(dirName);
 		while (true) {
 			Result<String> result = restClient.postForObject("http://" + node.val + "/command",
-					"partition " + node.path + " " + server, Result.class);
+					"partition " + node.path + "," + server, Result.class);
 
 			if (result.isOperationSuccess())
 				return true;

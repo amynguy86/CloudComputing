@@ -17,6 +17,8 @@ public class CommandLine {
 	public static Logger logger = LoggerFactory.getLogger(CommandLine.class);
 	@Autowired
 	IMetaData client;
+	@Autowired
+	StatCollector collector;
 	RandomTest randomTest;
 
 	public void begin() {
@@ -98,6 +100,13 @@ public class CommandLine {
 						logger.info("ok");
 					else
 						logger.info("fail");
+					break;
+				case "stats":
+					System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));
+					System.out.println("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
+					System.out.println("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
+					System.out.println("RM: " + collector.getSummaryStatistics(Operation.RM));
+					System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
 					break;
 				default:
 					logger.info("Incorrect command");

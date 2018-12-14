@@ -130,7 +130,8 @@ public class CephStorage extends Storage {
 		logger.info("Executing Command partition, data: {}", data);
 		Result<String> result = new Result<>();
 		result.setOperationSuccess(false);
-		String[] tokenizer = data.split(" ");
+		//changing format to allow for dir names with spaces
+		String[] tokenizer = data.split(",");
 
 		if (tokenizer.length != 2) {
 			result.setOperationReturnMessage("Invalid parameter");
