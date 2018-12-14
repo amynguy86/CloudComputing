@@ -31,6 +31,12 @@ public class App {
 	@Value("${cloud.command.line}")
 	boolean isCommandline;
 
+	@Value("${test.type}")
+	String testType;
+
+	@Value("${test.should.delete}")
+	boolean shouldDelete;
+
 	private static String filename;
 
 	private static Logger LOG = LoggerFactory.getLogger(App.class);
@@ -55,14 +61,23 @@ public class App {
 		return new TimedMDS((IMetaData) constructor.newInstance(serverAddress), clientType, collector);
 	}
 
+
 	@PostConstruct
 	public void begin() throws Exception {
 		if (!isCommandline) {
 			TreeParser p = new TreeParser();
 			FileNode out = p.readFile(filename);
-			RandomTest test = new RandomTest(out, client);
-			test.walk(20, 1000);
-			test.destructiveWalk(10, 20, .25);
+			if(testType.startsWith("Full")){
+				FullTest test = new FullTest(out, client);
+				test.walk();
+				if(shouldDelete){
+					test.destroy();
+				}
+			} else {
+				RandomTest test = new RandomTest(out, client);
+				test.walk(20, 1000);
+				test.destructiveWalk(10, 20, .25);
+			}
 			System.out.println(client.ls("/"));
 			System.out.println(client.ls("/test"));
 			System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));

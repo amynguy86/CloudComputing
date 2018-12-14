@@ -34,7 +34,7 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeStart = System.nanoTime();
 		List<String> result = wrapped.ls(dirName);
 		long nanoTimeEnd = System.nanoTime();
-		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
 		logger.info(lsMsg + time);
 		collector.addStat(Operation.LS, time);
 		return result;
@@ -44,7 +44,7 @@ public class TimedMDS implements IMetaData {
         long nanoTimeStart = System.nanoTime();
         boolean result = wrapped.mkdir(dirName);
         long nanoTimeEnd = System.nanoTime();
-        double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+        double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
         logger.info(mkdirMsg + time);
         //if(result)
             collector.addStat(Operation.MKDIR, time);
@@ -56,7 +56,7 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeStart = System.nanoTime();
 		boolean result = wrapped.touch(filePath);
 		long nanoTimeEnd = System.nanoTime();
-		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
 		logger.info(touchMsg + time);
 		//Measuring Response time is needed as well
 		//if(result)
@@ -69,7 +69,7 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeStart = System.nanoTime();
 		boolean result = wrapped.rm(filePath);
 		long nanoTimeEnd = System.nanoTime();
-		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
 		logger.info(rmMsg + time);
 		collector.addStat(Operation.RM, time);
 		return result;
@@ -80,7 +80,7 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeStart = System.nanoTime();
 		boolean result = wrapped.rmdir(dirname);
 		long nanoTimeEnd = System.nanoTime();
-		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
 		logger.info(rmdirMsg + time);
 		collector.addStat(Operation.RMDIR, time);
 		return result;
@@ -92,7 +92,7 @@ public class TimedMDS implements IMetaData {
 		long nanoTimeStart = System.nanoTime();
 		boolean result = wrapped.partition(data);
 		long nanoTimeEnd = System.nanoTime();
-		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000);
+		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
 		logger.info(partitionMsg + time);
 		collector.addStat(Operation.PARTITION, time);
 		return result;
