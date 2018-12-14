@@ -13,9 +13,6 @@ public class CassandraMDS implements IMetaData {
     public CassandraMDS(String IPAddress)
     {
         cc=new CassConnector(IPAddress);
-        RemoteLock lock = new RemoteLock(lockHost,lockPort);
-        lock.writeLock("/root/file1");
-
     }
 
     public void configureDB()
@@ -33,9 +30,19 @@ public class CassandraMDS implements IMetaData {
         cc.shutdown();
     }
 
+
     public boolean mkdir(String dirName)
     {
         return addFile(dirName,true);
+    }
+
+    public void lock(String path)
+    {
+        RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
+        lock1.writeLock(path);
+        try {Thread.sleep(20000); }
+        catch(Exception e) {}
+        lock1.unlock(path);
     }
 
     public List<String> ls(String dirName)
@@ -62,7 +69,6 @@ public class CassandraMDS implements IMetaData {
         subfileList.addAll(keys);
         return subfileList;
     }
-
 
     public boolean touch(String filePath)
     {
@@ -95,6 +101,8 @@ public class CassandraMDS implements IMetaData {
             lock1.unlock(parentDir);
             return false;  //parent did not exist
         }
+
+
         lock1.unlock(parentDir);
         RemoteLock lock2 = new RemoteLock(lockHost,lockPort);
         lock2.writeLock(filePath);
@@ -224,6 +232,16 @@ public class CassandraMDS implements IMetaData {
         cc.delete(path);
     }
 
+    public FileNode getRootNode()
+    {
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
+        lock1.readlock("/");
+        String rootString=cc.read("/");
+        FileNode rootNode=gson.fromJson(rootString,FileNode.class);
+        return rootNode;
+    }
 	@Override
 	public boolean partition(String data) {
 		// TODO Auto-generated method stub

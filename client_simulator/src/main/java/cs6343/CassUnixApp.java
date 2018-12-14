@@ -22,23 +22,34 @@ String input;
          {
              cmds.configureDB();
          }
-         if(cmd.equals("mkdir"))
+         else if(arg.equals(""))
          {
+             System.out.println("Invalid argument");
+         }
+         else if(cmd.equals("lock"))
+         {
+            System.out.println("Locking file "+arg);
+             cmds.lock(arg);
+             System.out.println(arg+" unlocked");
+         }
+         else if(cmd.equals("mkdir"))
+         {
+
             System.out.println(cmds.mkdir(arg));
          }
-         if(cmd.equals("touch"))
+         else if(cmd.equals("touch"))
          {
              System.out.println(cmds.touch(arg));
          }
-         if(cmd.equals("rm"))
+         else if(cmd.equals("rm"))
          {
              System.out.println(cmds.rm(arg));
          }
-         if(cmd.equals("ls"))
+         else if(cmd.equals("ls"))
          {
              System.out.println(cmds.ls(arg));
          }
-         if(cmd.equals("rmdir"))
+         else if(cmd.equals("rmdir"))
          {
              System.out.println(cmds.rmdir(arg));
          }
@@ -53,7 +64,33 @@ else {
 
 
     cmds.configureDB();
+    cmds.mkdir("/a");
+    cmds.mkdir("/a/a");
+    cmds.mkdir("/a/b");
+    cmds.mkdir("/a/a/a");
+    cmds.mkdir("/a/a/b");
+    cmds.mkdir("/a/b/a");
+    cmds.mkdir("/a/b/b");
+    cmds.mkdir("/b");
+    cmds.mkdir("/b/a");
+    cmds.mkdir("/b/b");
+    cmds.mkdir("/b/a/a");
+    cmds.mkdir("/b/a/b");
+    cmds.mkdir("/b/b/a");
+    cmds.mkdir("/b/b/b");
 
+
+
+
+
+
+    FileNode rootNode=cmds.getRootNode();
+    StatCollector statCollector= new StatCollector();
+    TimedMDS timedMDS=new TimedMDS(cmds,"Unix", statCollector);
+
+    RandomTest tester= new RandomTest(rootNode, timedMDS);
+    tester.walk(10,10);
+    System.out.println("Random test finished.  ");
     /*
     cmds.mkdir("/a");
   //  cmds.mkdir("/b");
