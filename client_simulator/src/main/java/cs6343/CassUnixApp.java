@@ -63,8 +63,9 @@ else {
 
 
 
-    cmds.configureDB();
-    cmds.disableMessages();
+  //  cmds.configureDB();
+  //  cmds.disableMessages();
+    /*
     cmds.mkdir("/a");
     cmds.mkdir("/a/a");
     cmds.mkdir("/a/b");
@@ -80,6 +81,7 @@ else {
     cmds.mkdir("/b/b/a");
     cmds.mkdir("/b/b/b");
 
+*/
 
 
 
@@ -95,19 +97,7 @@ else {
     System.out.println(statCollector.getSummaryStatistics(Operation.LS));
     System.out.println(statCollector.getSummaryStatistics(Operation.MKDIR));
     System.out.println(statCollector.getSummaryStatistics(Operation.TOUCH));
-    /*
-    cmds.mkdir("/a");
-  //  cmds.mkdir("/b");
-    cmds.mkdir("/a/aa");
-    cmds.mkdir("/a/ab");
-    cmds.mkdir("/a/aa/aaa");
-    cmds.mkdir("/a/ab/aaa");
-    cmds.mkdir("/a/aa/aaa/aaaa");
-    System.out.println(cmds.ls("/a/aa/aaa"));
-    cmds.rmdir("/a");
-    System.out.println(cmds.ls("/a/aa/aaa"));
-    System.out.println(cmds.ls("/"));
-*/
+
 
 }
 cmds.disconnect();
