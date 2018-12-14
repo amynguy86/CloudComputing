@@ -25,7 +25,7 @@ public class CommandLine {
 				System.out.print("ENTER COMMAND HERE:--------->");
 				Scanner scanner = new Scanner(System.in);
 				String command = scanner.nextLine();
-				String[] args = command.split("\\s");
+				String[] args = command.trim().split(" ",2);
 				String cmd = args[0].toLowerCase();
 				String toPrint;
 				switch (cmd) {
@@ -80,14 +80,18 @@ public class CommandLine {
 					break;
 
 				case "print":
-					String tree=client.printTree(args[1]);
-					if(args.length>2) {
-						Path path =Paths.get(args[2]);
+					if(args[1].indexOf("-file=")!=-1) {
+						String dir= args[1].substring(0,args[1].indexOf("-file=")).trim();
+						String file = args[1].substring(args[1].indexOf("-file=")+6).trim();
+						Path path =Paths.get(file);
 						logger.info("Output file: "+path.toUri());
-						Files.write(path, tree.getBytes());
+						String tree=client.printTree(dir);
+						Files.write(path, tree.getBytes());						
 					}
-					else
+					else {
+						String tree=client.printTree(args[1]);
 						logger.info("\n" +tree );
+					}
 					break;
 
 				case "deletechildren":
