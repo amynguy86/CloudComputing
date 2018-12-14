@@ -62,10 +62,9 @@ String input;
 else {
 
 
-
-  //  cmds.configureDB();
+    cmds.configureDB();
   //  cmds.disableMessages();
-    /*
+
     cmds.mkdir("/a");
     cmds.mkdir("/a/a");
     cmds.mkdir("/a/b");
@@ -73,18 +72,44 @@ else {
     cmds.mkdir("/a/a/b");
     cmds.mkdir("/a/b/a");
     cmds.mkdir("/a/b/b");
+    cmds.mkdir("/a/a/a/a");
+    cmds.mkdir("/a/a/a/b");
+    cmds.mkdir("/a/a/b/a");
+    cmds.mkdir("/a/a/b/b");
+    cmds.mkdir("/a/b/a/a");
+    cmds.mkdir("/a/b/a/b");
+    cmds.mkdir("/a/b/b/a");
+    cmds.mkdir("/a/b/b/b");
+    cmds.mkdir("/a/a/a/a/a");
+    cmds.mkdir("/a/a/a/b/a");
+    cmds.mkdir("/a/a/b/a/a");
+    cmds.mkdir("/a/a/b/b/a");
+    cmds.mkdir("/a/b/a/a/a");
+    cmds.mkdir("/a/b/a/b/a");
+    cmds.mkdir("/a/b/b/a/a");
+    cmds.mkdir("/a/b/b/b/a");
+    cmds.mkdir("/a/a/a/a/b");
+    cmds.mkdir("/a/a/a/b/b");
+    cmds.mkdir("/a/a/b/a/b");
+    cmds.mkdir("/a/a/b/b/b");
+    cmds.mkdir("/a/b/a/a/b");
+    cmds.mkdir("/a/b/a/b/b");
+    cmds.mkdir("/a/b/b/a/b");
+    cmds.mkdir("/a/b/b/b/b");
+
     cmds.mkdir("/b");
     cmds.mkdir("/b/a");
     cmds.mkdir("/b/b");
+    cmds.mkdir("/b/c");
     cmds.mkdir("/b/a/a");
     cmds.mkdir("/b/a/b");
+    cmds.mkdir("/b/a/c");
     cmds.mkdir("/b/b/a");
     cmds.mkdir("/b/b/b");
-
-*/
-
-
-
+    cmds.mkdir("/b/b/c");
+    cmds.mkdir("/b/c/a");
+    cmds.mkdir("/b/c/b");
+    cmds.mkdir("/b/c/c");
 
 
     FileNode rootNode=cmds.getRootNode();
