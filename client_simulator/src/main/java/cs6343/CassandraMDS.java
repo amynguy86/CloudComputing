@@ -47,7 +47,7 @@ public class CassandraMDS implements IMetaData {
         lock1.unlock(path);
     }
 
-    public List<String> ls(String dirName)
+    public List<FileNode> ls(String dirName)
     {
         RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
         lock1.readlock(dirName);
@@ -67,14 +67,11 @@ public class CassandraMDS implements IMetaData {
         }
         if(fileNode.getSubFiles()==null)
         {
-            List<String> emptyList = new ArrayList<>();
+            List<FileNode> emptyList = new ArrayList<>();
             return emptyList;
         }
         Map<String, FileNode> subFiles=fileNode.getSubFiles();
-        Set<String> keys=subFiles.keySet();
-        List<String> subfileList = new ArrayList<String>();
-        subfileList.addAll(keys);
-        return subfileList;
+        return new ArrayList<>(subFiles.values());
     }
 
     public boolean touch(String filePath)

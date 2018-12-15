@@ -44,7 +44,6 @@ public class PhysicalInode implements Inode {
 	    if(this.metaData.type == FileType.DIRECTORY)
             return "DirInode [name=" + name + "] "+readWriteLock +" "+path;
 	    else
-
 			return "Inode [name=" + name + "] "+readWriteLock +" "+path;
 	}
 

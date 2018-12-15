@@ -23,7 +23,7 @@ public class CentralizedMDS implements IMetaData {
         this.headers.add("content-type", "application/json");
     }
 
-    public List<String> ls(String dirname){
+    public List<FileNode> ls(String dirname){
        HttpEntity<String> requestEntity = new HttpEntity<String>("ls " + dirname, headers);
        ResponseEntity<String> responseEntity = rest.exchange(path, HttpMethod.POST, requestEntity, String.class);
        JsonParser parser = new JsonParser();
@@ -34,7 +34,7 @@ public class CentralizedMDS implements IMetaData {
        }
        String result = obj.getAsJsonPrimitive("operationReturnVal").getAsString();
        String[] inodes = result.split("\n");
-       return Arrays.stream(inodes).map(x -> x.substring(x.indexOf('=')+1, x.indexOf(']'))).collect(Collectors.toList());
+       return null;//Arrays.stream(inodes).map(x -> x.substring(x.indexOf('=')+1, x.indexOf(']'))).collect(Collectors.toList());
     }
 
     @Override

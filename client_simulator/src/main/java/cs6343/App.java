@@ -2,6 +2,7 @@ package cs6343;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Random;
 
 import javax.annotation.PostConstruct;
 
@@ -70,18 +71,32 @@ public class App {
 		if (!isCommandline) {
 			TreeParser p = new TreeParser();
 			FileNode out = p.readFile(filename);
+			switch(testType){
+				case "FullTest":
+					FullTest test = new FullTest(out, client);
+					if(shouldAdd){
+						test.walk();
+					}
+					if(shouldDelete){
+						test.destroy();
+					}
+					break;
+				case "RequestTest":
+				    RequestTest rt = new RequestTest(client);
+				    for(int i = 0; i < 100; i++){
+				    	rt.makeRequests(getRandomDepth(), new double[]{});
+					}
+					break;
+				case "RandomTest":
+					RandomTest randomTest = new RandomTest(out, client);
+					randomTest.walk(20, 1000);
+					randomTest.destructiveWalk(10, 20, .25);
+					break;
+
+			}
+
 			if(testType.startsWith("Full")){
-				FullTest test = new FullTest(out, client);
-				if(shouldAdd){
-					test.walk();
-				}
-				if(shouldDelete){
-					test.destroy();
-				}
 			} else {
-				RandomTest test = new RandomTest(out, client);
-				test.walk(20, 1000);
-				test.destructiveWalk(10, 20, .25);
 			}
 			System.out.println(client.ls("/"));
 			System.out.println(client.ls("/test"));
@@ -94,5 +109,10 @@ public class App {
 		} else {
 			commandLine.begin();
 		}
+	}
+
+	public int getRandomDepth(){
+		Random r = new Random();
+		return 5 + r.nextInt(4);
 	}
 }
