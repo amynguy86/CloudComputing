@@ -41,7 +41,11 @@ public class PhysicalInode implements Inode {
 
 	@Override
 	public String toString() {
-		return "Inode [name=" + name + "] "+readWriteLock +" "+path;
+	    if(this.metaData.type == FileType.DIRECTORY)
+            return "DirInode [name=" + name + "] "+readWriteLock +" "+path;
+	    else
+
+			return "Inode [name=" + name + "] "+readWriteLock +" "+path;
 	}
 
 	public void addChild(Inode inode) {

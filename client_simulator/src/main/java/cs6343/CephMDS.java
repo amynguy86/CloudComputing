@@ -239,7 +239,7 @@ public class CephMDS implements IMetaData {
 	}
 
 	@Override
-	public List<String> ls(String dirName) {
+	public List<FileNode> ls(String dirName) {
 		logger.info("ls " + dirName);
 		Node node = this.cache.get(dirName);
 		while (true) {
@@ -249,7 +249,7 @@ public class CephMDS implements IMetaData {
 			if (result.isOperationSuccess()) {
 				return result.getOperationReturnVal().length() != 0
 						? Arrays.stream(result.getOperationReturnVal().split("\n"))
-								.map(x -> x.substring(x.indexOf('=') + 1, x.indexOf(']'))).collect(Collectors.toList())
+								.map(this::getFileNodeFromString).collect(Collectors.toList())
 						: Collections.EMPTY_LIST;
 			}
 
@@ -269,6 +269,15 @@ public class CephMDS implements IMetaData {
 
 		}
 	}
+
+	public FileNode getFileNodeFromString(String fileNode){
+		String name = fileNode.substring(fileNode.indexOf('=') + 1, fileNode.indexOf(']'));
+		if(fileNode.startsWith("Dir")){
+			return  new FileNode(name, true);
+		}
+        return  new FileNode(name, false);
+	}
+
 
 	@Override
 	public boolean touch(String filePath) {
@@ -382,10 +391,10 @@ public class CephMDS implements IMetaData {
 
 	@Override
 	public boolean deleteChildren(String path) {
-		List<String> nodes = this.ls(path);
+		List<FileNode> nodes = this.ls(path);
 		if (nodes != null) {
-			for (String node : nodes) {
-				String newPath = path + node;
+			for (FileNode node : nodes) {
+				String newPath = path + node.getFileName();
 				logger.info("Deleting:" + newPath);
 				if (!this.rmdir(newPath)) {
 					if (!this.rm(newPath))
