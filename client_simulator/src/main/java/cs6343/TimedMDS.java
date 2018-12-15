@@ -30,9 +30,9 @@ public class TimedMDS implements IMetaData {
 	}
 
 	@Override
-	public List<String> ls(String dirName) {
+	public List<FileNode> ls(String dirName) {
 		long nanoTimeStart = System.nanoTime();
-		List<String> result = wrapped.ls(dirName);
+		List<FileNode> result = wrapped.ls(dirName);
 		long nanoTimeEnd = System.nanoTime();
 		double time = ((nanoTimeEnd - nanoTimeStart) / 1000000.0);
 		logger.info(lsMsg + time);
