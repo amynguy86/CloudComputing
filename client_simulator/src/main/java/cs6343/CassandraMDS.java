@@ -9,8 +9,8 @@ import java.util.Set;
 public class CassandraMDS implements IMetaData {
     boolean messages=true;
     CassConnector cc;
-    String lockHost="127.0.0.1";  //ip address for the lock server.
-    int lockPort=6969;
+    String lockHost="192.168.29.164";  //ip address for the lock server.
+    int lockPort=6060;
     public CassandraMDS(String IPAddress)
     {
         cc=new CassConnector(IPAddress);
@@ -47,7 +47,7 @@ public class CassandraMDS implements IMetaData {
         lock1.unlock(path);
     }
 
-    public List<String> ls(String dirName)
+    public List<FileNode> ls(String dirName)
     {
         RemoteLock lock1 = new RemoteLock(lockHost,lockPort);
         lock1.readlock(dirName);
@@ -67,14 +67,19 @@ public class CassandraMDS implements IMetaData {
         }
         if(fileNode.getSubFiles()==null)
         {
-            List<String> emptyList = new ArrayList<>();
+            List<FileNode> emptyList = new ArrayList<>();
             return emptyList;
         }
         Map<String, FileNode> subFiles=fileNode.getSubFiles();
         Set<String> keys=subFiles.keySet();
         List<String> subfileList = new ArrayList<String>();
         subfileList.addAll(keys);
-        return subfileList;
+        List<FileNode> nodeList= new ArrayList<>();
+        for(int i=0;i<subfileList.size();i++)
+        {
+            nodeList.add(fileNode.getSubFile(subfileList.get(i)));
+        }
+        return nodeList;
     }
 
     public boolean touch(String filePath)
