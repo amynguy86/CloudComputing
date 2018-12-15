@@ -75,10 +75,10 @@ public class RandomTest{
         }
     }
 
-    private void ensureNotInside(List<String> ls, String filename) {
+    private void ensureNotInside(List<FileNode> ls, String filename) {
         if(ls == null) return;
-        for(String f : ls){
-           if(filename.equals(f)){
+        for(FileNode f : ls){
+           if(filename.equals(f.getFileName())){
                throw new RuntimeException("Deleted a file and it was still present in response");
            }
         }
