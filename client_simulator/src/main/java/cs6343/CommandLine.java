@@ -139,15 +139,6 @@ public class CommandLine {
 
 					logger.info("depth:{}, times:{},prob:{}", depth, times, prob);
 					break;
-				case "configure":
-					if(client instanceof CassandraMDS) {
-						CassandraMDS mds = (CassandraMDS) client;
-						mds.configureDB();
-					}	
-					else {
-						logger.error("This command is only valid for CassandraMDS");
-					}
-					break;
 				default:
 					logger.info("Incorrect command");
 				}

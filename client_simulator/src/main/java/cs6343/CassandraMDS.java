@@ -290,7 +290,8 @@ public class CassandraMDS implements IMetaData {
 	@Override
 	public boolean deleteChildren(String path) {
 		// TODO Auto-generated method stub
-		return false;
+		this.configureDB();
+		return true;
 	}
 
 	@Override
