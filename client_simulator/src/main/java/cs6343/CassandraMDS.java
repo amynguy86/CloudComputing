@@ -9,8 +9,8 @@ import java.util.Set;
 public class CassandraMDS implements IMetaData {
     boolean messages=true;
     CassConnector cc;
-    String lockHost="127.0.0.1";  //ip address for the lock server.
-    int lockPort=6969;
+    String lockHost="192.168.29.164";  //ip address for the lock server.
+    int lockPort=6060;
     public CassandraMDS(String IPAddress)
     {
         cc=new CassConnector(IPAddress);
@@ -282,7 +282,8 @@ public class CassandraMDS implements IMetaData {
 	@Override
 	public boolean deleteChildren(String path) {
 		// TODO Auto-generated method stub
-		return false;
+		this.configureDB();
+		return true;
 	}
 
 	@Override
