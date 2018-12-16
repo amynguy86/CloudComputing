@@ -127,6 +127,6 @@ public class App {
 	
 	public int getRandomDepth(){
 		Random r = new Random();
-		return 5 + r.nextInt(4);
+		return 4 + r.nextInt(4);
 	}
 }
