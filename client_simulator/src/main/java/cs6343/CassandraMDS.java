@@ -71,15 +71,7 @@ public class CassandraMDS implements IMetaData {
             return emptyList;
         }
         Map<String, FileNode> subFiles=fileNode.getSubFiles();
-        Set<String> keys=subFiles.keySet();
-        List<String> subfileList = new ArrayList<String>();
-        subfileList.addAll(keys);
-        List<FileNode> nodeList= new ArrayList<>();
-        for(int i=0;i<subfileList.size();i++)
-        {
-            nodeList.add(fileNode.getSubFile(subfileList.get(i)));
-        }
-        return nodeList;
+        return new ArrayList<>(subFiles.values());
     }
 
     public boolean touch(String filePath)
