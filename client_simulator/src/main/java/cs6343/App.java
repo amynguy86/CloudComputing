@@ -69,7 +69,9 @@ public class App {
 	public void begin() throws Exception {
 		if (!isCommandline) {
 			TreeParser p = new TreeParser();
-			FileNode out = p.readFile(filename);
+			FileNode out=null;
+			if(!testType.startsWith("Req"))
+				out = p.readFile(filename);
 			LOG.info("Running: "+testType);
 			switch(testType){
 				case "FullTest":
