@@ -272,7 +272,7 @@ public class CephMDS implements IMetaData {
 
 	public FileNode getFileNodeFromString(String fileNode){
 		String name = fileNode.substring(fileNode.indexOf('=') + 1, fileNode.indexOf(']'));
-		if(fileNode.startsWith("Dir")){
+		if(fileNode.startsWith("Dir") || fileNode.startsWith("VirtualInode")){
 			return  new FileNode(name, true);
 		}
         return  new FileNode(name, false);
