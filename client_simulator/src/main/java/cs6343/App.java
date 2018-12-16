@@ -100,13 +100,13 @@ public class App {
 			if(testType.startsWith("Full")){
 			} else {
 			}
-			System.out.println(client.ls("/"));
+			LOG.info(client.ls("/").toString());
 			System.out.println(client.ls("/test"));
-			System.out.println("LS: " + collector.getSummaryStatistics(Operation.LS));
-			System.out.println("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
-			System.out.println("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
-			System.out.println("RM: " + collector.getSummaryStatistics(Operation.RM));
-			System.out.println("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
+			LOG.info("LS: " + collector.getSummaryStatistics(Operation.LS));
+			LOG.info("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
+			LOG.info("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
+			LOG.info("RM: " + collector.getSummaryStatistics(Operation.RM));
+			LOG.info("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
 			System.exit(0);
 		} else {
 			commandLine.begin();
