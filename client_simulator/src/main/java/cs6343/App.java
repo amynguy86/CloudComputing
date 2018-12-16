@@ -85,7 +85,7 @@ public class App {
 					break;
 				case "RequestTest":
 				    RequestTest rt = new RequestTest(client);
-				    for(int i = 0; i < 10000; i++){
+				    for(int i = 0; i < 1000; i++){
 				    	LOG.info("Request No: {}",i);
 				    	if(i%100==0) {
 				    		this.printStats();
