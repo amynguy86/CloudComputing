@@ -70,6 +70,11 @@ public class FileNode {
     public String prettyPrint(){
         return prettyPrint(" ");
     }
+    
+    public String toString() {
+		return filename;
+    	
+    }
 
 }
 

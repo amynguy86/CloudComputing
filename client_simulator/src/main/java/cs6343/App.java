@@ -1,5 +1,7 @@
 package cs6343;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
@@ -71,6 +73,7 @@ public class App {
 		if (!isCommandline) {
 			TreeParser p = new TreeParser();
 			FileNode out = p.readFile(filename);
+			LOG.info("Running: "+testType);
 			switch(testType){
 				case "FullTest":
 					FullTest test = new FullTest(out, client);
@@ -83,7 +86,7 @@ public class App {
 					break;
 				case "RequestTest":
 				    RequestTest rt = new RequestTest(client);
-				    for(int i = 0; i < 100; i++){
+				    for(int i = 0; i < 250000; i++){
 				    	rt.makeRequest(getRandomDepth(), new double[]{0.25,0.25,0.25,0.25});
 					}
 					break;
