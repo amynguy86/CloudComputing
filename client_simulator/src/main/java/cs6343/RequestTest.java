@@ -7,9 +7,13 @@ import java.lang.ref.ReferenceQueue;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class RequestTest {
 
     public IMetaData mds;
+    public static Logger logger = LoggerFactory.getLogger(RequestTest.class);
 
     public RequestTest(IMetaData mds){
         this.mds = mds;
@@ -64,10 +68,12 @@ public class RequestTest {
     }
 
     public String goToDepth(int depth){
+    	logger.info("goToDepth:"+depth);
         Stack<String> options = new Stack<>();
         for(String option : getShuffledDirectories("/")) options.push(option);
         while(!options.isEmpty()){
             String option = options.pop();
+            logger.info("Option:"+option);
             if(option.split("/").length >= depth) return option;
             for(String child : getShuffledDirectories(option)) options.push(child);
         }

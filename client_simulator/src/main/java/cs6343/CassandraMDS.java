@@ -6,7 +6,11 @@ import java.util.List;
 import java.util.ArrayList;
 
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class CassandraMDS implements IMetaData {
+	public static Logger logger = LoggerFactory.getLogger(CassandraMDS.class);
     boolean messages=true;
     CassConnector cc;
     String lockHost="192.168.29.164";  //ip address for the lock server.
@@ -23,7 +27,7 @@ public class CassandraMDS implements IMetaData {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         cc.insert("/",gson.toJson(root));
-        if(messages) System.out.println("Database configured.");
+        if(messages) logger.info("Database configured.");
     }
 
 
@@ -62,7 +66,7 @@ public class CassandraMDS implements IMetaData {
         FileNode fileNode=gson.fromJson(dirString, FileNode.class);
         if(!fileNode.isDirectory)
         {
-            if(messages) System.out.println(dirName + "  is not a directory.  ");
+            if(messages) logger.info(dirName + "  is not a directory.  ");
             return null;
         }
         if(fileNode.getSubFiles()==null)
@@ -114,7 +118,7 @@ public class CassandraMDS implements IMetaData {
         lock2.unlock(filePath);
         if(!fileDeleted)
         {
-          if(messages)  System.out.println(filePath+" does not exist");
+          if(messages)  logger.info(filePath+" does not exist");
         }
         return fileDeleted;
     }
@@ -135,7 +139,7 @@ public class CassandraMDS implements IMetaData {
 
         if(parentString==null) //parent directory does not exist
         {
-           if(messages) System.out.println("Parent directory does not exist. ");
+           if(messages) logger.info("Parent directory does not exist. ");
             return false;
         }
         //add directory to the system
@@ -145,7 +149,7 @@ public class CassandraMDS implements IMetaData {
         lock1.unlock(path);
         if(!fileAdded)  //file already exists in system
         {
-           if(messages) System.out.println(path+" already exists.");
+           if(messages) logger.info(path+" already exists.");
             return false;
         }
         //add directory to parent's list of subfiles
@@ -159,15 +163,15 @@ public class CassandraMDS implements IMetaData {
             cc.delete(path);
             lock3.unlock(path);
             lock2.unlock(parentDir);
-            if(messages) System.out.println("Create "+path+" failed.  Parent directory no longer exists. ");
+            if(messages) logger.info("Create "+path+" failed.  Parent directory no longer exists. ");
             return false;
         }
         FileNode parentNode=gson.fromJson(parentString,FileNode.class);
         parentNode.addSubFile(newFile);
         cc.edit(parentDir, gson.toJson(parentNode));
         lock2.unlock(parentDir);
-        if(messages&&isDirectory) System.out.println("Directory "+path+"  created.  ");
-        if(messages&&!isDirectory) System.out.println("File "+path+"  created.  ");
+        if(messages&&isDirectory) logger.info("Directory "+path+"  created.  ");
+        if(messages&&!isDirectory) logger.info("File "+path+"  created.  ");
         return true;
     }
 
@@ -196,7 +200,7 @@ public class CassandraMDS implements IMetaData {
         else
         {
             lock1.unlock(parentDir);
-            if(messages) System.out.println("Failed to delete "+dirName);
+            if(messages) logger.info("Failed to delete "+dirName);
             return false;  //parent did not exist, either node is root or something went wrong
         }
         lock1.unlock(parentDir);
@@ -221,11 +225,11 @@ public class CassandraMDS implements IMetaData {
         }
         if(fileDeleted)
         {
-            if(messages) System.out.println(dirName+" deleted.  ");
+            if(messages) logger.info(dirName+" deleted.  ");
         }
         else
         {
-            if(messages) System.out.println(dirName + " not found.  ");
+            if(messages) logger.info(dirName + " not found.  ");
         }
         return fileDeleted;
     }
