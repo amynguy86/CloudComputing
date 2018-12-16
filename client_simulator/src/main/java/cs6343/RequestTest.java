@@ -21,6 +21,7 @@ public class RequestTest {
 
     public void makeRequest(int depth, double[] action_probs){
         String path = goToDepth(depth);
+        if(path==null) return;
         Action action = getAction(action_probs);
         switch(action){
             case RM:
@@ -37,6 +38,8 @@ public class RequestTest {
             case RMDIR:
                 mds.rmdir(path);
                 break;
+            default:
+            	break;
         }
     }
 
@@ -56,7 +59,11 @@ public class RequestTest {
     }
 
     private String findChildFile(String start){
-        List<FileNode> files = mds.ls(start).stream().filter(x->x.isDirectory).collect(Collectors.toList());
+    	List<FileNode> result = mds.ls(start);
+    	if(result==null) 
+    		return null;
+    	
+        List<FileNode> files = result.stream().filter(x->!x.isDirectory).collect(Collectors.toList());
         if(files.isEmpty()){
             List<String> stuff = getShuffledDirectories(start);
             if(stuff.isEmpty()) return null;
@@ -77,11 +84,16 @@ public class RequestTest {
             if(option.split("/").length >= depth) return option;
             for(String child : getShuffledDirectories(option)) options.push(child);
         }
-        throw new IllegalArgumentException("Fuck I can't find anything");
+        logger.info("Could not find anything at depth: {}",depth);
+        return null;
+        //throw new IllegalArgumentException("Fuck I can't find anything");
     }
 
     public List<String> getShuffledDirectories(String path){
         List<FileNode> files = mds.ls(path);
+        if(files==null)
+        	return Collections.emptyList();
+        
         Collections.shuffle(files);
         final String prefix = "/".equals(path) ? "" : path;
         return files.stream().filter(x->x.isDirectory).map(x-> prefix + "/" + x.getFileName()).collect(Collectors.toList());
