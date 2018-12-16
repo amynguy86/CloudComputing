@@ -85,7 +85,8 @@ public class App {
 					break;
 				case "RequestTest":
 				    RequestTest rt = new RequestTest(client);
-				    for(int i = 0; i < 250000; i++){
+				    for(int i = 0; i < 50000; i++){
+				    	LOG.info("Request No: {}",i);
 				    	rt.makeRequest(getRandomDepth(), new double[]{0.25,0.25,0.25,0.25});
 					}
 					break;
