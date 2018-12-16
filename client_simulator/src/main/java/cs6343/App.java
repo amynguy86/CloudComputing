@@ -85,8 +85,11 @@ public class App {
 					break;
 				case "RequestTest":
 				    RequestTest rt = new RequestTest(client);
-				    for(int i = 0; i < 50000; i++){
+				    for(int i = 0; i < 10000; i++){
 				    	LOG.info("Request No: {}",i);
+				    	if(i%100==0) {
+				    		this.printStats();
+				    	}
 				    	rt.makeRequest(getRandomDepth(), new double[]{0.25,0.25,0.25,0.25});
 					}
 					break;
@@ -113,7 +116,15 @@ public class App {
 			commandLine.begin();
 		}
 	}
-
+	
+	public void printStats(){
+		LOG.info("LS: " + collector.getSummaryStatistics(Operation.LS));
+		LOG.info("MKDIR: " + collector.getSummaryStatistics(Operation.MKDIR));
+		LOG.info("TOUCH: " + collector.getSummaryStatistics(Operation.TOUCH));
+		LOG.info("RM: " + collector.getSummaryStatistics(Operation.RM));
+		LOG.info("RMDIR: " + collector.getSummaryStatistics(Operation.RMDIR));
+	}
+	
 	public int getRandomDepth(){
 		Random r = new Random();
 		return 5 + r.nextInt(4);
