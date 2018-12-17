@@ -85,7 +85,7 @@ public class App {
 					break;
 				case "RequestTest":
 				    RequestTest rt = new RequestTest(client);
-				    for(int i = 0; i < 100; i++){
+				    for(int i = 0; i < 1000; i++){
 				    	LOG.info("Request No: {}",i);
 				    	if(i%100==0) {
 				    		this.printStats();
@@ -127,6 +127,6 @@ public class App {
 	
 	public int getRandomDepth(){
 		Random r = new Random();
-		return 4 + r.nextInt(4);
+		return 2 + r.nextInt(4);
 	}
 }
