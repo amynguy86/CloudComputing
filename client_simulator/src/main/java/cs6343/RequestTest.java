@@ -70,8 +70,7 @@ public class RequestTest {
             return findChildFile(stuff.get(0));
         }
         Collections.shuffle(files);
-        return start + "/" + files.get(0).getFileName();
-
+        return !files.get(0).getFileName().startsWith("/")?start + "/" + files.get(0).getFileName():start + files.get(0).getFileName();
     }
 
     public String goToDepth(int depth){
