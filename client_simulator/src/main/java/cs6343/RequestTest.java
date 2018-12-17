@@ -96,7 +96,9 @@ public class RequestTest {
         
         Collections.shuffle(files);
         final String prefix = "/".equals(path) ? "" : path;
-        return files.stream().filter(x->x.isDirectory).map(x-> prefix + "/" + x.getFileName()).collect(Collectors.toList());
+        
+        
+        return files.stream().filter(x->x.isDirectory).map(x->!x.getFileName().startsWith("/")? prefix + "/" + x.getFileName():prefix + x.getFileName()).collect(Collectors.toList());
     }
 
 }
